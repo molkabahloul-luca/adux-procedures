@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -113,6 +114,7 @@ body{background:var(--bg);color:#1a1a1a;font-family:'Barlow',sans-serif;font-siz
 .tpl-card:hover{border-color:rgba(212,43,43,.4);background:#fff8f8}
 .tpl-card.sel{border-color:var(--red);background:#fff0f0}
 .cl-matrix-row:hover{background:#fafafa}
+.pm-plan-card:hover{border-color:rgba(212,43,43,.4)!important}
 .note-card{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:16px 18px;transition:box-shadow .15s}
 .note-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
 .note-filtre{font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;font-family:'Barlow',sans-serif;color:#888;transition:all .15s;white-space:nowrap}
@@ -581,6 +583,9 @@ tfoot td.r{text-align:right}
     <button class="nav-btn" onclick="SP('historique',this)"><span class="nav-icon">📜</span><span>Historique</span></button>
   </div>
   <div class="nav-footer">ADUX Stratégies · v1.1</div>
+  <div style="padding:8px 10px;border-top:1px solid rgba(255,255,255,.07)">
+    <button class="nav-btn" onclick="SP('settings',this)" style="font-size:11px;color:rgba(255,255,255,.35)"><span class="nav-icon" style="font-size:13px">⚙️</span><span>Paramètres</span></button>
+  </div>
 </nav>
 
 <!-- CONTENT -->
@@ -602,10 +607,7 @@ tfoot td.r{text-align:right}
       <div class="hero-tag"><span class="hero-dot"></span>Procédures internes · v1.2</div>
       <h1>Procédures<br><span style="color:var(--red)">Adux</span></h1>
       <p class="hero-sub">Gérez vos projets clients et accédez à vos outils</p>
-      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-        <button onclick="exportData()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;letter-spacing:.04em">⬇ Exporter</button>
-        <label style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;letter-spacing:.04em">⬆ Importer<input type="file" accept=".json" onchange="importData(this)" style="display:none"></label>
-      </div>
+
     </div>
   </div>
   <div class="home-wrap">
@@ -614,7 +616,7 @@ tfoot td.r{text-align:right}
       <div class="wiz-sub">Entrez le nom du client, choisissez un template et créez le projet.</div>
       <div class="wiz-row" style="margin-bottom:16px">
         <div class="wiz-grp" style="flex:2"><label class="wiz-lbl">Nom du client</label><input class="wiz-inp" type="text" id="wiz-client" placeholder="ex: Groupe TAQ…"></div>
-        <div class="wiz-grp"><label class="wiz-lbl">Responsable</label><select class="wiz-inp" id="wiz-role"><option value="cdp">Chef de projet</option><option value="gc">Gestionnaire</option><option value="design">Design</option></select></div>
+        <div class="wiz-grp"><label class="wiz-lbl">Responsable</label><select class="wiz-inp" id="wiz-role"><option value="patrice">Patrice</option><option value="francis">Francis</option><option value="molka">Molka</option><option value="megraton">Marie-Ève Graton</option><option value="meboucher">Marie-Ève Boucher</option><option value="charleseric">Charles-Éric</option></select></div>
       </div>
       <div class="wiz-lbl" style="margin-bottom:10px">Type de mandat</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:18px" id="tpl-btns">
@@ -692,6 +694,7 @@ tfoot td.r{text-align:right}
 <div class="panel" id="p-projet"></div>
 <div class="panel" id="p-notes"></div>
 <div class="panel" id="p-devis"></div>
+<div class="panel" id="p-settings"></div>
 <div class="panel" id="p-search"></div>
 <div class="panel" id="p-notif"></div>
 
@@ -749,12 +752,13 @@ function SP(id, btn) {
   if (id==='historique')                    { buildHistorique(); }
   if (id==='dashboard')                     { buildDashboard(); }
   if (id==='hebdo')                         { buildHebdo(); }
-  if (id==='planmedia' && !window._pm)      { buildPlanMedia(); window._pm=true; }
+  if (id==='planmedia')                      { buildPlanMedia(); }
   if (id==='checklists')                      { buildChecklists(); }
   if (id==='todo')                           { buildTodo(); }
   if (id==='projet')                         { buildProjetDetail(); }
   if (id==='notes')                          { buildNotes(); }
   if (id==='devis')                          { buildDevis(); }
+  if (id==='settings')                        { buildSettings(); }
   if (id==='search')                         { renderSearch(document.getElementById('sidebar-search')?document.getElementById('sidebar-search').value:''); }
   if (id==='notif')                          { buildNotif(); }
 }
@@ -865,7 +869,29 @@ function openMod(i, type){
   updateCtxBar();
 }
 
-function delProj(i){ projects.splice(i,1); saveProjects(); renderProjects(); showToast('Projet supprimé','#64748b'); }
+var _delProjPending = null;
+var _delProjTimer   = null;
+
+function delProj(i){
+  var proj = projects[i]; if(!proj) return;
+  if(_delProjPending === i){
+    // 2e clic — confirmer la suppression
+    clearTimeout(_delProjTimer);
+    _delProjPending = null;
+    projects.splice(i, 1);
+    saveProjects();
+    renderProjects();
+    showToast('Projet "'+proj.client+'" supprimé', '#64748b');
+    return;
+  }
+  // 1er clic — demander confirmation
+  _delProjPending = i;
+  showToast('⚠ Cliquez à nouveau sur ✕ pour confirmer la suppression de "'+proj.client+'"', '#f59e0b');
+  // Annuler après 4 secondes
+  _delProjTimer = setTimeout(function(){
+    _delProjPending = null;
+  }, 4000);
+}
 function clearProjects(){ if(confirm('Effacer tous les projets actifs ?')){projects=projects.filter(function(p){return !!p._archived;});saveProjects();renderProjects();} }
 function clearArchived(){ projects=projects.filter(function(p){return !p._archived;});saveProjects();renderProjects(); }
 
@@ -996,14 +1022,14 @@ function realItems(sec){return sec.items.map(function(it,i){return{it:it,i:i};})
 function doneCount(ns,sec){return realItems(sec).filter(function(x){return !!getStates(ns)[ck(ns,sec.id,x.i)];}).length;}
 
 var ROLE_META = {
-  cdp:    {label:'Chef de projet',         bg:'#f0f0ee',color:'#3a3a3a',dot:'#3a3a3a'},
-  gc:     {label:'Gestionnaire',           bg:'#fffbeb',color:'#92400e',dot:'#f59e0b'},
+  cdp:    {label:'Patrice / Francis / Molka', bg:'#f0f0ee',color:'#3a3a3a',dot:'#3a3a3a'},
+  gc:     {label:'Gestionnaire de compte',    bg:'#fffbeb',color:'#92400e',dot:'#f59e0b'},
   client: {label:'Client',                 bg:'#fff0f0',color:'#991b1b',dot:'var(--red)'},
-  design: {label:'Design',                 bg:'#f5f3ff',color:'#5b21b6',dot:'#7c3aed'},
-  dev:    {label:'Développeur',            bg:'#eef2ff',color:'#312e81',dot:'#6366f1'},
+  design: {label:'Marie-Ève Graton',        bg:'#f5f3ff',color:'#5b21b6',dot:'#7c3aed'},
+  dev:    {label:'Charles-Éric',           bg:'#eef2ff',color:'#312e81',dot:'#6366f1'},
   vendeur:{label:'Vendeur',                bg:'#f5f3ff',color:'#5b21b6',dot:'#a78bfa'},
   dir:    {label:'Dir. de production',     bg:'#fffbeb',color:'#92400e',dot:'#f59e0b'},
-  strat:  {label:'Stratège',              bg:'#ecfdf5',color:'#065f46',dot:'#10b981'},
+  strat:  {label:'Patrice / Francis / Molka', bg:'#ecfdf5',color:'#065f46',dot:'#10b981'},
 };
 
 function buildCL(ns, data, roles){
@@ -1268,7 +1294,7 @@ function buildNoProjectScreen(id){
 //  DONNÉES CHECKLISTS
 // ══════════════════════════════════════════
 
-var ONB_ROLES = {cdp:{cls:'pl-cdp',label:'Chef de projet'},gc:{cls:'pl-gc',label:'Gestionnaire'},client:{cls:'pl-client',label:'Client'},design:{cls:'pl-design',label:'Design'},vendeur:{cls:'pl-vendeur',label:'Vendeur'},dir:{cls:'pl-dir',label:'Direction'},strat:{cls:'pl-strat',label:'Stratège'},dev:{cls:'pl-dev',label:'Dev'}};
+var ONB_ROLES = {cdp:{cls:'pl-cdp',label:'Patrice / Francis / Molka'},gc:{cls:'pl-gc',label:'Gestionnaire de compte'},client:{cls:'pl-client',label:'Client'},design:{cls:'pl-design',label:'Marie-Ève Graton'},vendeur:{cls:'pl-vendeur',label:'Vendeur'},dir:{cls:'pl-dir',label:'Direction'},strat:{cls:'pl-strat',label:'Patrice / Francis / Molka'},dev:{cls:'pl-dev',label:'Charles-Éric'}};
 var CL_ROLES  = ONB_ROLES;
 var WEB_ROLES = ONB_ROLES;
 var SEO_ROLES = ONB_ROLES;
@@ -1588,7 +1614,7 @@ var TR_STATUTS = [
   {val:'cours', label:'En cours',    bg:'#dbeafe', color:'#1d4ed8', emoji:'🔵'},
 ];
 var TR_PLATF = ['Meta Ads','Google Ads','LinkedIn Ads','Meta + Google','SEO','Contenu','Site web','Banque d\'heures','Autre'];
-var TR_RESPS = ['CDP','GC','Design','Stratège','Dev','Vendeur'];
+var TR_RESPS = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
 
 var trData = {
   annee: new Date().getFullYear(),
@@ -1829,7 +1855,7 @@ function trDelClient(i){
 }
 
 // ── FEUILLES DE TEMPS ────────────────────────────────────
-var FT_EMPLOYES = ['CDP','GC','Design','Stratège','Dev','Vendeur'];
+var FT_EMPLOYES = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
 var FT_SERVICES = ['Planification stratégique','Search Ads','Social Ads','Geofencing','SEO','Contenu','Design','Développement','Rencontres & divers','Gestion de projet','Autre'];
 var FT_JOURS    = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
@@ -2341,7 +2367,7 @@ function renderHebdo(){
 
   // ── Standups ──
   var standupCards = dat.standups.length ? dat.standups.map(function(s,i){
-    var empOpts = ['CDP','GC','Design','Stratège','Dev','Vendeur','Autre'].map(function(e){
+    var empOpts = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Autre'].map(function(e){
       return '<option value="'+e+'"'+(e===s.nom?' selected':'')+'>'+e+'</option>';
     }).join('');
     return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;overflow:hidden">'+
@@ -2487,304 +2513,367 @@ window.hbClientSet = function(wk,i,f,v){ hbGet(wk).clients[i][f]=v; saveHebdo();
 window.hbClientDel = function(wk,i){ hbGet(wk).clients.splice(i,1); saveHebdo(); renderHebdo(); };
 
 // ── PLAN MÉDIA ──────────────────────────────────────────
-var pmData = {
-  client: 'VILLE DE LÉVIS',
-  budgetGlobal: 33100,
-  tauxAdux: 135,
-  campagnes: [
-    {funnel:'Acquisition', campagne:'Geofencing – Salon Momentum (7j)', audience:'Localisation salon, rayon 1–2 km, âge 28–60', type:'Social Ads', plateforme:'Facebook Ads', kpi:'Coût par lead', objectif:'Génération de prospects', budgets:{avr:750,jul:750,oct:750}, reels:{}},
-    {funnel:'Awareness',   campagne:'Geofencing – Salon Stratégie PME (7j)', audience:'Localisation salon, rayon 1–2 km, âge 28–60', type:'Social Ads', plateforme:'Facebook Ads', kpi:'CPM', objectif:'Notoriété de marque', budgets:{}, reels:{}},
-    {funnel:'Acquisition', campagne:'Evergreen Palais des congrès', audience:'Palais des congrès Montréal, rayon 2–3 km', type:'Social Ads', plateforme:'Facebook Ads', kpi:'Coût par lead', objectif:'Génération de prospects', budgets:{avr:750,mai:750,jun:750,jul:750,aoû:750,sep:750,oct:750,nov:750,déc:750}, reels:{}},
-    {funnel:'Awareness',   campagne:'META – Outreach – Campagne globale', audience:'Grand Montréal', type:'Social Ads', plateforme:'Facebook Ads', kpi:'Impressions', objectif:'Notoriété de marque', budgets:{avr:500,mai:500,jul:500,aoû:500,oct:500,nov:500}, reels:{}},
-    {funnel:'Acquisition', campagne:'META – Remarketing – Campagne globale', audience:'Grand Montréal', type:'Social Ads', plateforme:'Facebook Ads', kpi:'Impressions', objectif:'Notoriété de marque', budgets:{avr:500,mai:500,jul:500,aoû:500,oct:500,nov:500}, reels:{}},
-    {funnel:'Awareness',   campagne:'META – Outreach – Vidéo aller simple', audience:'Grand Montréal', type:'Social Ads', plateforme:'Facebook Ads', kpi:'Impressions', objectif:'Notoriété de marque', budgets:{avr:500,mai:500,jul:500,aoû:500,oct:500,nov:500}, reels:{}},
-    {funnel:'Awareness',   campagne:'LinkedIn – Outreach + Remarketing', audience:'Grand Montréal', type:'Social Ads', plateforme:'LinkedIn Ads', kpi:'Impressions', objectif:'Notoriété de marque', budgets:{avr:1500,mai:1500,jul:1500,aoû:1500,oct:1500,nov:1500}, reels:{}},
-    {funnel:'Acquisition', campagne:'Search – Centre des congrès', audience:'Grand Montréal', type:'Search Ads', plateforme:'Google Search Ads', kpi:'Génération de prospects', objectif:'Génération de prospects', budgets:{avr:500,mai:500,jun:500,jul:500,aoû:500,sep:500,oct:500,nov:500,déc:500}, reels:{}},
-    {funnel:'Awareness',   campagne:'YouTube – Centre des congrès', audience:'Grand Montréal', type:'Search Ads', plateforme:'YouTube Ads', kpi:'Impressions', objectif:'Génération de prospects', budgets:{avr:1000,mai:1000,jul:1000,aoû:1000,oct:1000,nov:1000}, reels:{}},
-    {funnel:'Awareness',   campagne:'Geofencing – Centre des congrès', audience:'Grand Montréal', type:'Géociblage', plateforme:'Geofencing', kpi:'Portée', objectif:'Notoriété de marque', budgets:{mai:1500,jun:1500,aoû:1500,sep:1500}, reels:{}},
-  ],
-  heures: [
-    {service:'Planification stratégique',   adux:{jan:17,fév:17,mar:0,avr:0,mai:0,jun:0,jul:0,aoû:0,sep:0,oct:0,nov:17,déc:0}, reels:{}},
-    {service:'Search Ads',                  adux:{jan:0,fév:0,mar:10,avr:2,mai:0,jun:2,jul:2,aoû:0,sep:2,oct:0,nov:2,déc:2},   reels:{}},
-    {service:'Social Ads',                  adux:{jan:0,fév:0,mar:15,avr:4,mai:0,jun:4,jul:4,aoû:0,sep:4,oct:0,nov:4,déc:4},   reels:{}},
-    {service:'Geofencing',                  adux:{jan:0,fév:0,mar:5,avr:1,mai:0,jun:1,jul:1,aoû:0,sep:1,oct:0,nov:1,déc:1},    reels:{}},
-    {service:'Rencontres & divers',         adux:{jan:0,fév:0,mar:3,avr:3,mai:0,jun:3,jul:3,aoû:0,sep:3,oct:0,nov:3,déc:3},    reels:{}},
-    {service:'Gestion de projet & coord.',  adux:{jan:3,fév:3,mar:3,avr:3,mai:2,jun:2,jul:2,aoû:0,sep:2,oct:2,nov:0,déc:2},    reels:{}},
-  ]
-};
-try { var _pmd=localStorage.getItem('adux_pm2'); if(_pmd) pmData=JSON.parse(_pmd); } catch(e){}
+// pmData = { plans: [{id, projId, client, annee, budgetGlobal, tauxAdux, campagnes, heures}] }
+// ── PLAN MÉDIA — MULTI-CLIENTS ──────────────────────────
+// pmData = { plans: [ { id, projId, annee, client, budgetGlobal, tauxAdux, campagnes:[], heures:[] } ] }
+var pmData = { plans: [], activeId: null };
+try { var _pmd=localStorage.getItem('adux_pm2'); if(_pmd){ var _pmdp=JSON.parse(_pmd); if(_pmdp.plans) pmData=_pmdp; } } catch(e){}
 function savePM(){ try{localStorage.setItem('adux_pm2',JSON.stringify(pmData));}catch(e){} }
 
-var PM_MOIS_KEYS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+var PM_MOIS_KEYS   = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
 var PM_MOIS_LABELS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 var PM_Q = [[0,1,2],[3,4,5],[6,7,8],[9,10,11]];
+var PM_FUNNEL_COLORS = {'Acquisition':'#d42b2b','Awareness':'#1d4ed8','Consideration':'#15803d'};
+var PM_PLAT_COLORS  = {'Facebook Ads':'#1877F2','LinkedIn Ads':'#0a66c2','Google Search Ads':'#34A853','YouTube Ads':'#FF0000','Geofencing':'#7c3aed','Instagram Ads':'#E1306C','TikTok Ads':'#69C9D0'};
+var PM_ANNEE = new Date().getFullYear();
 
-var PM_FUNNEL_COLORS = {
-  'Acquisition':'#d42b2b','Awareness':'#1d4ed8','Consideration':'#15803d'
-};
-var PM_PLAT_COLORS = {
-  'Facebook Ads':'#1877F2','LinkedIn Ads':'#0a66c2','Google Search Ads':'#34A853',
-  'YouTube Ads':'#FF0000','Geofencing':'#7c3aed','Instagram Ads':'#E1306C'
-};
+var pmState = { vue: 'liste' }; // vue: 'liste' | 'plan'
 
-function buildPlanMedia(){
-  var p=document.getElementById('p-planmedia'); if(!p) return;
-  window._pm=true;
-  renderPM();
+function pmGetActive(){ return pmData.plans.find(function(p){return p.id===pmData.activeId;})||null; }
+
+function pmNewPlan(){
+  // Propose un sélecteur de projet
+  var activeProjs = projects.filter(function(p){return !p._archived;});
+  var plan = {
+    id: Date.now(),
+    projId: activeProjs.length ? activeProjs[0].id : null,
+    client: activeProjs.length ? activeProjs[0].client : 'Nouveau client',
+    annee: PM_ANNEE,
+    budgetGlobal: 0,
+    tauxAdux: 135,
+    campagnes: [],
+    heures: [
+      {service:'Planification stratégique', adux:{}, reels:{}},
+      {service:'Gestion de projet',         adux:{}, reels:{}},
+    ]
+  };
+  pmData.plans.push(plan);
+  pmData.activeId = plan.id;
+  savePM(); pmState.vue='plan'; renderPM();
+}
+
+function pmOpenPlan(id){ pmData.activeId=id; pmState.vue='plan'; savePM(); renderPM(); }
+function pmBackToList(){ pmState.vue='liste'; renderPM(); }
+function pmDeletePlan(id){
+  pmData.plans = pmData.plans.filter(function(p){return p.id!==id;});
+  if(pmData.activeId===id) pmData.activeId=null;
+  savePM(); pmState.vue='liste'; renderPM();
 }
 
 function pmSum(obj){ return PM_MOIS_KEYS.reduce(function(a,k){return a+(obj[k]||0);},0); }
-function pmQSum(obj, qi){ return PM_Q[qi].reduce(function(a,i){return a+(obj[PM_MOIS_KEYS[i]]||0);},0); }
+function pmQSum(obj,qi){ return PM_Q[qi].reduce(function(a,i){return a+(obj[PM_MOIS_KEYS[i]]||0);},0); }
+
+function buildPlanMedia(){ window._pm=true; renderPM(); }
 
 function renderPM(){
   var p=document.getElementById('p-planmedia'); if(!p) return;
+  if(pmState.vue==='plan' && pmData.activeId){
+    var plan = pmGetActive();
+    if(plan) renderPMPlan(p, plan); else { pmState.vue='liste'; renderPMListe(p); }
+  } else {
+    renderPMListe(p);
+  }
+}
 
-  // ── Calculs globaux ──
-  var totalBudgetCampagnes = pmData.campagnes.reduce(function(a,c){return a+pmSum(c.budgets);},0);
-  var totalHeuresAdux = pmData.heures.reduce(function(a,h){return a+pmSum(h.adux);},0);
-  var totalHeuresReels = pmData.heures.reduce(function(a,h){return a+pmSum(h.reels);},0);
-  var budgetAdux = totalHeuresAdux * pmData.tauxAdux;
+function renderPMListe(p){
+  var plans = pmData.plans;
+  var activeProjs = projects.filter(function(pr){return !pr._archived;});
 
-  // ── En-tête stats ──
-  var pctUsed = budgetAdux>0 ? Math.round(totalHeuresReels/totalHeuresAdux*100) : 0;
-  var heuresRestantes = totalHeuresAdux - totalHeuresReels;
-
-  var headerHtml =
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px">'+
-      mkKPI('Budget global planifié', fmtCAD(pmData.budgetGlobal), 'red', 'Budget total du mandat')+
-      mkKPI('Budget campagnes', fmtCAD(totalBudgetCampagnes), 'wh', 'Médias publicitaires')+
-      mkKPI('Budget ADUX ('+pmData.tauxAdux+'$/h)', fmtCAD(budgetAdux), 'bl', totalHeuresAdux+' h planifiées')+
-      mkKPI('Heures réalisées', totalHeuresReels+' h', pctUsed>=80?'red':'gr', totalHeuresAdux+'h prévues · '+pctUsed+'% utilisé')+
-      mkKPI('Heures restantes', heuresRestantes+' h', heuresRestantes<0?'red':'gy', (heuresRestantes<0?'⚠ Dépassement':heuresRestantes===0?'Budget épuisé':'Disponibles'))+
+  var cards = plans.length ? plans.map(function(plan){
+    var totalCamp = plan.campagnes.reduce(function(a,c){return a+pmSum(c.budgets||{});},0);
+    var totalH    = plan.heures.reduce(function(a,h){return a+pmSum(h.adux||{});},0);
+    var budgetAdux= totalH * (plan.tauxAdux||135);
+    return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .18s" onclick="pmOpenPlan('+plan.id+')" class="pm-plan-card">'+
+      '<div style="background:linear-gradient(90deg,#1a1a1a,#2a2a2a);padding:16px 20px">'+
+        '<div style="font-size:18px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:4px">'+plan.client+'</div>'+
+        '<div style="font-size:10px;color:rgba(255,255,255,.4)">'+plan.annee+' · '+plan.campagnes.length+' campagne'+(plan.campagnes.length!==1?'s':'')+' · '+totalH+' h ADUX</div>'+
+      '</div>'+
+      '<div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center">'+
+        '<div>'+
+          '<div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Budget médias</div>'+
+          '<div style="font-size:18px;font-weight:900;font-family:Barlow Condensed,sans-serif;color:var(--red)">'+fmtCAD(totalCamp)+'</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Budget ADUX</div>'+
+          '<div style="font-size:18px;font-weight:900;font-family:Barlow Condensed,sans-serif;color:#1d4ed8">'+fmtCAD(budgetAdux)+'</div>'+
+        '</div>'+
+        '<button onclick="event.stopPropagation();pmDeletePlan('+plan.id+')" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:18px;padding:4px">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('') :
+    '<div style="text-align:center;padding:60px;color:#bbb;background:#fff;border-radius:10px;border:1px dashed #e8e8e8">'+
+      '<div style="font-size:48px;margin-bottom:16px">📅</div>'+
+      '<div style="font-size:14px;font-weight:600;margin-bottom:8px">Aucun plan média</div>'+
+      '<div style="font-size:12px;margin-bottom:20px">Créez un plan par client</div>'+
     '</div>';
 
-  // ── En-tête colonnes mois ──
-  var thMois = PM_MOIS_LABELS.map(function(m,i){
-    var q='Q'+(Math.floor(i/3)+1);
+  p.innerHTML =
+    '<div class="hero" style="background:linear-gradient(135deg,#1a1a2e,#2a2a2a)"><div class="hero-inner">'+
+      '<div class="hero-tag" style="background:#1d4ed8"><span class="hero-dot"></span>Plans Média</div>'+
+      '<h1>Plans <span style="color:#60a5fa">Média</span></h1>'+
+      '<p class="hero-sub">Un plan média par client — campagnes, budgets, heures ADUX</p>'+
+    '</div></div>'+
+    '<div style="max-width:900px;margin:0 auto;padding:28px 40px 80px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
+        '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">'+plans.length+' plan'+(plans.length!==1?'s':'')+' média</div>'+
+        '<button onclick="pmNewPlan()" class="wiz-btn">+ Nouveau plan média</button>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:12px">'+cards+'</div>'+
+    '</div>';
+}
+
+function renderPMPlan(p, plan){
+  var totalBudgetCampagnes = plan.campagnes.reduce(function(a,c){return a+pmSum(c.budgets||{});},0);
+  var totalHeuresAdux  = plan.heures.reduce(function(a,h){return a+pmSum(h.adux||{});},0);
+  var totalHeuresReels = plan.heures.reduce(function(a,h){return a+pmSum(h.reels||{});},0);
+  var budgetAdux = totalHeuresAdux * (plan.tauxAdux||135);
+  var pctUsed = totalHeuresAdux>0?Math.round(totalHeuresReels/totalHeuresAdux*100):0;
+  var heuresRestantes = totalHeuresAdux - totalHeuresReels;
+
+  var activeProjs = projects.filter(function(pr){return !pr._archived;});
+  var projOpts = '<option value="">— Sans projet —</option>'+activeProjs.map(function(pr){
+    return '<option value="'+pr.id+'"'+(String(plan.projId)===String(pr.id)?' selected':'')+'>'+pr.client+'</option>';
+  }).join('');
+
+  var thMois = PM_MOIS_LABELS.map(function(m){
     return '<th style="min-width:54px;font-size:9px;color:rgba(255,255,255,.7);padding:5px 4px;border:1px solid rgba(255,255,255,.1)">'+m+'</th>';
   }).join('');
   var thQ = ['Q1','Q2','Q3','Q4'].map(function(q){
     return '<th style="background:rgba(212,43,43,.3);font-size:9px;color:#fff;padding:5px 4px;border:1px solid rgba(255,255,255,.15)">'+q+'</th>';
   }).join('');
-  var thTotal = '<th style="background:rgba(212,43,43,.5);font-size:9px;color:#fff;padding:5px 4px;border:1px solid rgba(255,255,255,.15)">TOTAL</th>';
 
-  var campThead =
-    '<thead>'+
-      '<tr style="background:#2a2a2a">'+
-        '<th style="min-width:100px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">FUNNEL</th>'+
-        '<th style="min-width:220px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">CAMPAGNE / AUDIENCE</th>'+
-        '<th style="min-width:90px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">PLATEFORME</th>'+
-        '<th style="min-width:90px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">KPI / OBJECTIF</th>'+
-        thMois + thQ + thTotal +
-        '<th style="font-size:9px;color:rgba(255,255,255,.5);padding:5px 4px;border:1px solid rgba(255,255,255,.08)"></th>'+
-      '</tr>'+
-    '</thead>';
+  var PM_FUNNELS = ['Acquisition','Awareness','Consideration','Retargeting'];
+  var PM_TYPES   = ['Social Ads','Search Ads','Display Ads','Géociblage','Email','Vidéo'];
+  var PM_PLATES  = ['Facebook Ads','Instagram Ads','LinkedIn Ads','Google Search Ads','YouTube Ads','Geofencing','TikTok Ads','Pinterest Ads'];
 
-  // ── Lignes campagnes ──
-  var campRows = pmData.campagnes.map(function(c,ci){
+  var campRows = plan.campagnes.map(function(c,ci){
     var fColor = PM_FUNNEL_COLORS[c.funnel]||'#888';
     var pColor = PM_PLAT_COLORS[c.plateforme]||'#888';
-    var moisCells = PM_MOIS_KEYS.map(function(k,mi){
-      var val = c.budgets[k]||0;
-      var reel = c.reels[k]||0;
-      var bg = val>0 ? 'rgba(212,43,43,.08)' : 'transparent';
-      return '<td style="padding:3px;border:1px solid rgba(0,0,0,.06);background:'+bg+'">'+
-        '<div style="display:flex;flex-direction:column;gap:1px;min-width:50px">'+
-          (val>0?'<span style="font-size:9px;font-family:\'IBM Plex Mono\',monospace;color:#1a1a1a;text-align:center">'+fmtCAD(val)+'</span>':'<span style="font-size:9px;color:#ddd;text-align:center">—</span>')+
-          '<input type="number" min="0" placeholder="réel" value="'+(reel||'')+'" onchange="pmData.campagnes['+ci+'].reels[\''+k+'\']=parseFloat(this.value)||0;savePM();renderPM()" style="width:100%;font-size:8px;border:1px solid #e8e8e8;border-radius:3px;padding:1px 3px;color:#888;background:#fafafa;font-family:\'IBM Plex Mono\',monospace;text-align:center">'+
+    var funOpts = PM_FUNNELS.map(function(f){return '<option value="'+f+'"'+(f===c.funnel?' selected':'')+'>'+f+'</option>';}).join('');
+    var platOpts = PM_PLATES.map(function(f){return '<option value="'+f+'"'+(f===c.plateforme?' selected':'')+'>'+f+'</option>';}).join('');
+
+    var moisCells = PM_MOIS_KEYS.map(function(k){
+      var plan2=c.budgets||{}, reel2=c.reels||{};
+      var planV=plan2[k]||0, reelV=reel2[k]||0;
+      var bg = planV>0?'rgba(212,43,43,.06)':'transparent';
+      return '<td style="padding:2px;border:1px solid rgba(0,0,0,.06);background:'+bg+'">'+
+        '<div style="display:flex;flex-direction:column;gap:1px;min-width:52px">'+
+          '<input type="number" min="0" value="'+(planV||'')+'" placeholder="plan" '+
+            'onchange="(function(v){var pl=pmData.plans.find(function(p){return p.id==='+plan.id+'});if(!pl.campagnes['+ci+'].budgets)pl.campagnes['+ci+'].budgets={};pl.campagnes['+ci+'].budgets[\''+k+'\']= parseFloat(v)||0;savePM();renderPM();})(this.value)" '+
+            'style="width:100%;font-size:9px;border:1px solid #ffd0d0;border-radius:3px;padding:1px 3px;text-align:center;font-family:IBM Plex Mono,monospace;color:#d42b2b;background:#fff8f8">'+
+          '<input type="number" min="0" value="'+(reelV||'')+'" placeholder="réel" '+
+            'onchange="(function(v){var pl=pmData.plans.find(function(p){return p.id==='+plan.id+'});if(!pl.campagnes['+ci+'].reels)pl.campagnes['+ci+'].reels={};pl.campagnes['+ci+'].reels[\''+k+'\']= parseFloat(v)||0;savePM();})(this.value)" '+
+            'style="width:100%;font-size:8px;border:1px solid #e8e8e8;border-radius:3px;padding:1px 3px;color:#888;background:#fafafa;font-family:IBM Plex Mono,monospace;text-align:center">'+
         '</div></td>';
     }).join('');
+
     var qCells = [0,1,2,3].map(function(qi){
-      var qSum = pmQSum(c.budgets, qi);
-      var qReel = PM_Q[qi].reduce(function(a,i){return a+(c.reels[PM_MOIS_KEYS[i]]||0);},0);
+      var qP = pmQSum(c.budgets||{},qi);
+      var qR = PM_Q[qi].reduce(function(a,i){return a+((c.reels||{})[PM_MOIS_KEYS[i]]||0);},0);
       return '<td style="background:#fff8f8;border:1px solid rgba(212,43,43,.15);padding:4px;text-align:center">'+
-        (qSum>0?'<div style="font-size:9px;font-family:\'IBM Plex Mono\',monospace;color:var(--red);font-weight:700">'+fmtCAD(qSum)+'</div>':'<div style="font-size:9px;color:#ddd">—</div>')+
-        (qReel>0?'<div style="font-size:8px;color:#888">'+fmtCAD(qReel)+'</div>':'')+
+        (qP>0?'<div style="font-size:9px;font-family:IBM Plex Mono,monospace;color:var(--red);font-weight:700">'+fmtCAD(qP)+'</div>':'<div style="font-size:9px;color:#ddd">—</div>')+
+        (qR>0?'<div style="font-size:8px;color:#888">'+fmtCAD(qR)+'</div>':'')+
       '</td>';
     }).join('');
-    var total = pmSum(c.budgets);
-    return '<tr style="border-bottom:1px solid rgba(0,0,0,.06)">'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.06);white-space:nowrap">'+
-        '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;background:'+fColor+'22;color:'+fColor+'">'+c.funnel+'</span>'+
+
+    var total = pmSum(c.budgets||{});
+    return '<tr style="border-bottom:1px solid rgba(0,0,0,.04)">'+
+      '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06)">'+
+        '<select onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].funnel=v;savePM();renderPM();})(this.value)" '+
+          'style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:none;cursor:pointer;background:'+fColor+'22;color:'+fColor+'">'+funOpts+'</select>'+
       '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.06)">'+
-        '<div style="font-size:12px;font-weight:700;color:#1a1a1a;line-height:1.3" contenteditable onblur="pmData.campagnes['+ci+'].campagne=this.textContent;savePM()">'+c.campagne+'</div>'+
-        '<div style="font-size:10px;color:#888;margin-top:2px" contenteditable onblur="pmData.campagnes['+ci+'].audience=this.textContent;savePM()">'+c.audience+'</div>'+
+      '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06);min-width:200px">'+
+        '<div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:2px" contenteditable '+
+          'onblur="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].campagne=v;savePM();})(this.textContent)">'+c.campagne+'</div>'+
+        '<div style="font-size:10px;color:#888" contenteditable '+
+          'onblur="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].audience=v;savePM();})(this.textContent)">'+c.audience+'</div>'+
       '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.06)">'+
-        '<span style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;background:'+pColor+'22;color:'+pColor+'">'+c.plateforme+'</span>'+
-        '<div style="font-size:9px;color:#aaa;margin-top:3px">'+c.type+'</div>'+
+      '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06)">'+
+        '<select onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].plateforme=v;savePM();renderPM();})(this.value)" '+
+          'style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:none;cursor:pointer;background:'+pColor+'22;color:'+pColor+'">'+platOpts+'</select>'+
       '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.06)">'+
-        '<div style="font-size:10px;font-weight:600;color:#1a1a1a">'+c.kpi+'</div>'+
-        '<div style="font-size:9px;color:#888">'+c.objectif+'</div>'+
+      '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06)">'+
+        '<input value="'+c.kpi.replace(/"/g,'&quot;')+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].kpi=v;savePM();})(this.value)" '+
+          'style="font-size:10px;color:#555;border:none;outline:none;background:transparent;width:100%;font-family:Barlow,sans-serif">'+
       '</td>'+
-      moisCells + qCells +
-      '<td style="padding:4px;border:1px solid rgba(0,0,0,.06);text-align:center">'+
-        '<div style="font-size:10px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:var(--red)">'+fmtCAD(total)+'</div>'+
+      moisCells+qCells+
+      '<td style="padding:4px;text-align:center;border:none">'+
+        '<div style="font-size:10px;font-weight:700;font-family:IBM Plex Mono,monospace;color:var(--red)">'+fmtCAD(total)+'</div>'+
       '</td>'+
-      '<td style="padding:4px;border:none;text-align:center">'+
-        '<button onclick="pmDelCamp('+ci+')" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:12px" title="Supprimer">✕</button>'+
+      '<td style="padding:4px;text-align:center;border:none">'+
+        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes.splice('+ci+',1);savePM();renderPM();})()" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:13px">✕</button>'+
       '</td>'+
     '</tr>';
   }).join('');
 
-  // ── Ligne totaux campagnes ──
+  // Totaux campagnes
   var totMoisCells = PM_MOIS_KEYS.map(function(k){
-    var t = pmData.campagnes.reduce(function(a,c){return a+(c.budgets[k]||0);},0);
-    var r = pmData.campagnes.reduce(function(a,c){return a+(c.reels[k]||0);},0);
+    var t = plan.campagnes.reduce(function(a,c){return a+((c.budgets||{})[k]||0);},0);
     return '<td style="background:#2a2a2a;border:1px solid rgba(255,255,255,.1);padding:5px 3px;text-align:center">'+
-      '<div style="font-size:9px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:#fff">'+(t>0?fmtCAD(t):'—')+'</div>'+
-      (r>0?'<div style="font-size:8px;color:rgba(255,255,255,.4)">'+fmtCAD(r)+'</div>':'')+
-    '</td>';
+      '<div style="font-size:9px;font-weight:700;font-family:IBM Plex Mono,monospace;color:#fff">'+(t>0?fmtCAD(t):'—')+'</div></td>';
   }).join('');
   var totQCells = [0,1,2,3].map(function(qi){
-    var t = pmData.campagnes.reduce(function(a,c){return a+pmQSum(c.budgets,qi);},0);
+    var t = plan.campagnes.reduce(function(a,c){return a+pmQSum(c.budgets||{},qi);},0);
     return '<td style="background:rgba(212,43,43,.8);border:1px solid rgba(255,255,255,.2);padding:5px 3px;text-align:center">'+
-      '<div style="font-size:9px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:#fff">'+fmtCAD(t)+'</div>'+
-    '</td>';
+      '<div style="font-size:9px;font-weight:700;font-family:IBM Plex Mono,monospace;color:#fff">'+fmtCAD(t)+'</div></td>';
   }).join('');
 
-  // ── Section heures ADUX ──
-  var hThMois = PM_MOIS_LABELS.map(function(m){return '<th style="font-size:9px;color:rgba(255,255,255,.6);padding:5px 4px;border:1px solid rgba(255,255,255,.1);min-width:54px">'+m+'</th>';}).join('');
-  var hThQ = ['Q1','Q2','Q3','Q4'].map(function(q){return '<th style="background:rgba(212,43,43,.3);font-size:9px;color:#fff;padding:5px 4px;border:1px solid rgba(255,255,255,.15)">'+q+'</th>';}).join('');
-
-  var hRows = pmData.heures.map(function(h,hi){
-    var mCells = PM_MOIS_KEYS.map(function(k,mi){
-      var plan = h.adux[k]||0;
-      var reel = h.reels[k]||0;
-      return '<td style="padding:3px;border:1px solid rgba(0,0,0,.06);background:'+(plan>0?'rgba(29,78,216,.04)':'transparent')+'">'+
-        '<div style="display:flex;flex-direction:column;gap:1px;min-width:50px;text-align:center">'+
-          '<input type="number" min="0" value="'+(plan||'')+'" placeholder="0" onchange="pmData.heures['+hi+'].adux[\''+k+'\']=parseFloat(this.value)||0;savePM();renderPM()" style="width:100%;font-size:9px;border:1px solid #e0e8ff;border-radius:3px;padding:1px 3px;text-align:center;font-family:\'IBM Plex Mono\',monospace;color:#1d4ed8;background:#f0f4ff">'+
-          '<input type="number" min="0" value="'+(reel||'')+'" placeholder="réel" onchange="pmData.heures['+hi+'].reels[\''+k+'\']=parseFloat(this.value)||0;savePM();renderPM()" style="width:100%;font-size:8px;border:1px solid #e8e8e8;border-radius:3px;padding:1px 3px;text-align:center;color:#888;background:#fafafa;font-family:\'IBM Plex Mono\',monospace">'+
+  // Lignes heures ADUX
+  var hRows = plan.heures.map(function(h,hi){
+    var mCells = PM_MOIS_KEYS.map(function(k){
+      var planV=(h.adux||{})[k]||0, reelV=(h.reels||{})[k]||0;
+      return '<td style="padding:2px;border:1px solid rgba(0,0,0,.06);background:'+(planV>0?'rgba(29,78,216,.04)':'transparent')+'">'+
+        '<div style="display:flex;flex-direction:column;gap:1px;min-width:52px;text-align:center">'+
+          '<input type="number" min="0" value="'+(planV||'')+'" placeholder="0" '+
+            'onchange="(function(v){var pl=pmData.plans.find(function(p){return p.id==='+plan.id+'});if(!pl.heures['+hi+'].adux)pl.heures['+hi+'].adux={};pl.heures['+hi+'].adux[\''+k+'\']= parseFloat(v)||0;savePM();renderPM();})(this.value)" '+
+            'style="width:100%;font-size:9px;border:1px solid #e0e8ff;border-radius:3px;padding:1px 3px;text-align:center;font-family:IBM Plex Mono,monospace;color:#1d4ed8;background:#f0f4ff">'+
+          '<input type="number" min="0" value="'+(reelV||'')+'" placeholder="réel" '+
+            'onchange="(function(v){var pl=pmData.plans.find(function(p){return p.id==='+plan.id+'});if(!pl.heures['+hi+'].reels)pl.heures['+hi+'].reels={};pl.heures['+hi+'].reels[\''+k+'\']= parseFloat(v)||0;savePM();})(this.value)" '+
+            'style="width:100%;font-size:8px;border:1px solid #e8e8e8;border-radius:3px;padding:1px 3px;text-align:center;color:#888;background:#fafafa;font-family:IBM Plex Mono,monospace">'+
         '</div></td>';
     }).join('');
-    var qCells = [0,1,2,3].map(function(qi){
-      var qP = PM_Q[qi].reduce(function(a,i){return a+(h.adux[PM_MOIS_KEYS[i]]||0);},0);
-      var qR = PM_Q[qi].reduce(function(a,i){return a+(h.reels[PM_MOIS_KEYS[i]]||0);},0);
+    var qCells2 = [0,1,2,3].map(function(qi){
+      var qP=PM_Q[qi].reduce(function(a,i){return a+((h.adux||{})[PM_MOIS_KEYS[i]]||0);},0);
+      var qR=PM_Q[qi].reduce(function(a,i){return a+((h.reels||{})[PM_MOIS_KEYS[i]]||0);},0);
       return '<td style="background:#f0f4ff;border:1px solid rgba(29,78,216,.15);padding:4px;text-align:center">'+
-        '<div style="font-size:9px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:#1d4ed8">'+qP+' h</div>'+
+        '<div style="font-size:9px;font-weight:700;font-family:IBM Plex Mono,monospace;color:#1d4ed8">'+qP+' h</div>'+
         '<div style="font-size:8px;color:#888">'+qR+' h</div>'+
       '</td>';
     }).join('');
-    var totP = pmSum(h.adux); var totR = pmSum(h.reels);
+    var totP=pmSum(h.adux||{}), totR=pmSum(h.reels||{});
     return '<tr>'+
-      '<td style="padding:8px 12px;border:1px solid rgba(0,0,0,.06);font-size:11px;font-weight:700;color:#1a1a1a;white-space:nowrap">'+h.service+'</td>'+
-      mCells + qCells +
-      '<td style="padding:4px 6px;border:1px solid rgba(0,0,0,.06);text-align:center">'+
-        '<div style="font-size:9px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:#1d4ed8">'+totP+' h</div>'+
+      '<td style="padding:8px 12px;border:1px solid rgba(0,0,0,.06);font-size:11px;font-weight:700;white-space:nowrap" contenteditable '+
+        'onblur="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).heures['+hi+'].service=v;savePM();})(this.textContent)">'+h.service+'</td>'+
+      mCells+qCells2+
+      '<td style="padding:4px 6px;text-align:center">'+
+        '<div style="font-size:9px;font-weight:700;font-family:IBM Plex Mono,monospace;color:#1d4ed8">'+totP+' h</div>'+
         '<div style="font-size:8px;color:#888">'+totR+' h</div>'+
+      '</td>'+
+      '<td style="text-align:center">'+
+        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).heures.splice('+hi+',1);savePM();renderPM();})()" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:12px">✕</button>'+
       '</td>'+
     '</tr>';
   }).join('');
 
-  // ── Totaux heures ──
+  // Totaux heures
   var hTotMois = PM_MOIS_KEYS.map(function(k){
-    var tp = pmData.heures.reduce(function(a,h){return a+(h.adux[k]||0);},0);
-    var tr = pmData.heures.reduce(function(a,h){return a+(h.reels[k]||0);},0);
+    var tp=plan.heures.reduce(function(a,h){return a+((h.adux||{})[k]||0);},0);
     return '<td style="background:#1d4ed8;border:1px solid rgba(255,255,255,.2);padding:5px 3px;text-align:center">'+
-      '<div style="font-size:9px;font-weight:700;color:#fff;font-family:\'IBM Plex Mono\',monospace">'+(tp>0?tp+' h':'—')+'</div>'+
-      (tr>0?'<div style="font-size:8px;color:rgba(255,255,255,.5)">'+tr+' h</div>':'')+
-    '</td>';
+      '<div style="font-size:9px;font-weight:700;color:#fff;font-family:IBM Plex Mono,monospace">'+(tp>0?tp+' h':'—')+'</div></td>';
   }).join('');
   var hTotQ = [0,1,2,3].map(function(qi){
-    var tp = pmData.heures.reduce(function(a,h){return a+PM_Q[qi].reduce(function(b,i){return b+(h.adux[PM_MOIS_KEYS[i]]||0);},0);},0);
+    var tp=plan.heures.reduce(function(a,h){return a+PM_Q[qi].reduce(function(b,i){return b+((h.adux||{})[PM_MOIS_KEYS[i]]||0);},0);},0);
     return '<td style="background:rgba(29,78,216,.8);border:1px solid rgba(255,255,255,.2);padding:5px 3px;text-align:center">'+
-      '<div style="font-size:9px;font-weight:700;color:#fff;font-family:\'IBM Plex Mono\',monospace">'+tp+' h</div>'+
-    '</td>';
+      '<div style="font-size:9px;font-weight:700;color:#fff;font-family:IBM Plex Mono,monospace">'+tp+' h</div></td>';
   }).join('');
-
-  function mkKPI(lbl,val,cls,sub){ return '<div class="kpi '+cls+'"><div class="kl">'+lbl+'</div><div class="kv">'+val+'</div><div class="ks">'+sub+'</div></div>'; }
-
 
   p.innerHTML =
     '<div class="hero" style="background:linear-gradient(135deg,#1a1a2e,#2a2a2a)"><div class="hero-inner">'+
-      '<div class="hero-tag" style="background:#1d4ed8"><span class="hero-dot"></span>Plan Média Numérique</div>'+
-      '<h1>Plan <span style="color:#60a5fa">Média</span></h1>'+
-      '<div style="display:flex;align-items:center;gap:20px;margin-top:8px">'+
-        '<div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Client</div>'+
-          '<input value="'+pmData.client+'" oninput="pmData.client=this.value;savePM()" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);outline:none;padding:2px 0;font-family:\'Barlow Condensed\',sans-serif;text-transform:uppercase;letter-spacing:1px;width:280px"></div>'+
-        '<div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Taux horaire ADUX</div>'+
-          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+pmData.tauxAdux+'" oninput="pmData.tauxAdux=parseFloat(this.value)||135;savePM();renderPM()" style="font-size:18px;font-weight:700;color:#60a5fa;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);outline:none;width:80px;font-family:\'IBM Plex Mono\',monospace"><span style="color:rgba(255,255,255,.5);font-size:14px">$/h</span></div></div>'+
-        '<div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Budget global</div>'+
-          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+pmData.budgetGlobal+'" oninput="pmData.budgetGlobal=parseFloat(this.value)||0;savePM();renderPM()" style="font-size:18px;font-weight:700;color:#f0abfc;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);outline:none;width:100px;font-family:\'IBM Plex Mono\',monospace"><span style="color:rgba(255,255,255,.5);font-size:14px">$</span></div></div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'+
+        '<button onclick="pmBackToList()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">← Plans</button>'+
+        '<select onchange="(function(v){var pl=pmData.plans.find(function(p){return p.id==='+plan.id+'});pl.projId=v||null;var pr=projects.find(function(p){return String(p.id)===String(v)});if(pr&&pr.client)pl.client=pr.client;savePM();renderPM();})(this.value)" '+
+          'style="font-size:11px;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:5px 10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);cursor:pointer;font-family:Barlow,sans-serif">'+projOpts+'</select>'+
+      '</div>'+
+      '<div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:12px">'+
+        '<input value="'+plan.client.replace(/"/g,'&quot;')+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).client=v;savePM();})(this.value)" '+
+          'style="font-size:clamp(28px,5vw,52px);font-weight:900;color:#fff;background:transparent;border:none;border-bottom:2px solid rgba(255,255,255,.3);outline:none;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:1px;max-width:500px">'+
+        '<input type="number" value="'+(plan.annee||new Date().getFullYear())+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).annee=parseInt(v)||2026;savePM();})(this.value)" '+
+          'style="font-size:20px;font-weight:700;color:rgba(255,255,255,.5);background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.2);outline:none;width:70px;font-family:IBM Plex Mono,monospace">'+
+      '</div>'+
+      '<div style="display:flex;gap:20px;flex-wrap:wrap">'+
+        '<div><div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">Taux ADUX</div>'+
+          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+(plan.tauxAdux||135)+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).tauxAdux=parseFloat(v)||135;savePM();renderPM();})(this.value)" style="font-size:18px;font-weight:700;color:#60a5fa;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.25);outline:none;width:65px;font-family:IBM Plex Mono,monospace"><span style="color:rgba(255,255,255,.4);font-size:13px">$/h</span></div></div>'+
+        '<div><div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">Budget global</div>'+
+          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+(plan.budgetGlobal||0)+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).budgetGlobal=parseFloat(v)||0;savePM();renderPM();})(this.value)" style="font-size:18px;font-weight:700;color:#f0abfc;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.25);outline:none;width:100px;font-family:IBM Plex Mono,monospace"><span style="color:rgba(255,255,255,.4);font-size:13px">$</span></div></div>'+
       '</div>'+
     '</div></div>'+
 
     '<div style="max-width:1400px;margin:0 auto;padding:28px 32px 80px">'+
-
-      // Stats
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:24px">'+
-        '<div class="kpi red"><div class="kl">Budget global</div><div class="kv">'+fmtCAD(pmData.budgetGlobal)+'</div><div class="ks">Budget total du mandat</div></div>'+
-        '<div class="kpi wh"><div class="kl">Budget campagnes</div><div class="kv">'+fmtCAD(totalBudgetCampagnes)+'</div><div class="ks">Médias publicitaires</div></div>'+
-        '<div class="kpi bl"><div class="kl">Budget ADUX</div><div class="kv">'+fmtCAD(budgetAdux)+'</div><div class="ks">'+totalHeuresAdux+' h × '+pmData.tauxAdux+'$/h</div></div>'+
-        '<div class="kpi '+(pctUsed>=80?'red':'gr')+'"><div class="kl">Heures réalisées</div><div class="kv">'+totalHeuresReels+' h</div><div class="ks">'+pctUsed+'% utilisé</div></div>'+
+        '<div class="kpi red"><div class="kl">Budget global</div><div class="kv">'+fmtCAD(plan.budgetGlobal||0)+'</div><div class="ks">total du mandat</div></div>'+
+        '<div class="kpi wh"><div class="kl">Budget campagnes</div><div class="kv">'+fmtCAD(totalBudgetCampagnes)+'</div><div class="ks">médias publicitaires</div></div>'+
+        '<div class="kpi bl"><div class="kl">Budget ADUX</div><div class="kv">'+fmtCAD(budgetAdux)+'</div><div class="ks">'+totalHeuresAdux+' h × '+(plan.tauxAdux||135)+'$/h</div></div>'+
+        '<div class="kpi '+(pctUsed>=80?'red':'gr')+'"><div class="kl">Heures réalisées</div><div class="kv">'+totalHeuresReels+' h</div><div class="ks">'+pctUsed+'% du plan</div></div>'+
         '<div class="kpi gy"><div class="kl">Heures restantes</div><div class="kv">'+heuresRestantes+' h</div><div class="ks">'+(heuresRestantes<0?'⚠ Dépassement':'Disponibles')+'</div></div>'+
       '</div>'+
 
-      // ── CAMPAGNES ──
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
-        '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">📢 Campagnes — Planifié / Réel par mois</div>'+
-        '<button onclick="pmAddCamp()" class="btn-add">+ Ajouter une campagne</button>'+
-      '</div>'+
-      '<div style="font-size:9px;color:#aaa;margin-bottom:8px">Champ du haut = Planifié · Champ du bas = Réel</div>'+
-      '<div class="gantt-wrap" style="margin-bottom:28px">'+
-        '<table class="gantt" style="font-size:11px">'+
-          campThead+
-          '<tbody>'+campRows+'</tbody>'+
-          '<tfoot>'+
-            '<tr>'+
-              '<td colspan="4" style="background:#2a2a2a;color:#fff;font-weight:700;font-size:10px;padding:8px 12px;font-family:\'Barlow\',sans-serif;letter-spacing:.06em;text-transform:uppercase">TOTAL CAMPAGNES</td>'+
-              totMoisCells + totQCells +
-              '<td style="background:rgba(212,43,43,.9);color:#fff;font-weight:700;font-family:\'IBM Plex Mono\',monospace;font-size:10px;text-align:center;padding:6px 4px">'+fmtCAD(totalBudgetCampagnes)+'</td>'+
-              '<td style="background:#2a2a2a"></td>'+
-            '</tr>'+
-          '</tfoot>'+
-        '</table>'+
-      '</div>'+
-
-      // ── HEURES ADUX ──
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
-        '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">⏱ Heures ADUX — Planifié / Réel</div>'+
-        '<button onclick="pmAddService()" class="btn-add">+ Ajouter un service</button>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+        '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">📢 Campagnes — <span style="color:#bbb;font-size:10px;font-weight:400">Haut = Planifié · Bas = Réel</span></div>'+
+        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes.push({funnel:\'Acquisition\',campagne:\'Nouvelle campagne\',audience:\'Audience cible\',type:\'Social Ads\',plateforme:\'Facebook Ads\',kpi:\'Coût par lead\',budgets:{},reels:{}});savePM();renderPM();})()" class="btn-add">+ Ajouter une campagne</button>'+
       '</div>'+
       '<div class="gantt-wrap" style="margin-bottom:28px">'+
         '<table class="gantt" style="font-size:11px">'+
-          '<thead><tr style="background:#1d4ed8">'+
-            '<th class="gl" style="color:rgba(255,255,255,.7);font-size:9px;border:1px solid rgba(255,255,255,.1)">SERVICE</th>'+
-            hThMois + hThQ +
-            '<th style="color:rgba(255,255,255,.7);font-size:9px;border:1px solid rgba(255,255,255,.1);padding:5px 4px">TOTAL</th>'+
+          '<thead><tr style="background:#2a2a2a">'+
+            '<th style="min-width:80px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">FUNNEL</th>'+
+            '<th style="min-width:200px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">CAMPAGNE / AUDIENCE</th>'+
+            '<th style="min-width:90px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">PLATEFORME</th>'+
+            '<th style="min-width:80px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">KPI</th>'+
+            thMois+thQ+
+            '<th style="font-size:9px;color:rgba(255,255,255,.5);padding:5px 4px;border:1px solid rgba(255,255,255,.08)">TOTAL</th>'+
+            '<th style="width:24px;border:none"></th>'+
           '</tr></thead>'+
-          '<tbody>'+hRows+'</tbody>'+
+          '<tbody>'+(campRows||'<tr><td colspan="20" style="text-align:center;padding:32px;color:#bbb;font-size:12px">Aucune campagne — cliquez sur <strong>+ Ajouter une campagne</strong></td></tr>')+'</tbody>'+
           '<tfoot><tr>'+
-            '<td style="background:#1d4ed8;color:#fff;font-weight:700;font-size:10px;padding:8px 12px;font-family:\'Barlow\',sans-serif;letter-spacing:.06em;text-transform:uppercase">TOTAL HEURES</td>'+
-            hTotMois + hTotQ +
-            '<td style="background:#1d4ed8;color:#fff;font-weight:700;font-family:\'IBM Plex Mono\',monospace;font-size:10px;text-align:center;padding:6px 4px">'+totalHeuresAdux+' h</td>'+
+            '<td colspan="4" style="background:#2a2a2a;color:#fff;font-weight:700;font-size:10px;padding:8px 12px;letter-spacing:.06em;text-transform:uppercase">TOTAL CAMPAGNES</td>'+
+            totMoisCells+totQCells+
+            '<td style="background:rgba(212,43,43,.9);color:#fff;font-weight:700;font-family:IBM Plex Mono,monospace;font-size:10px;text-align:center;padding:6px 4px">'+fmtCAD(totalBudgetCampagnes)+'</td>'+
+            '<td style="background:#2a2a2a"></td>'+
           '</tr></tfoot>'+
         '</table>'+
       '</div>'+
 
-      '<div class="note">'+
-        '<strong>Astuce :</strong> Cliquez sur les noms de campagnes ou d\'audiences pour les modifier directement. '+
-        'Entrez les heures réelles dans les champs du bas pour suivre l\'avancement. '+
-        'Les totaux Q1–Q4 se mettent à jour automatiquement.'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+        '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">⏱ Heures ADUX — <span style="color:#bbb;font-size:10px;font-weight:400">Haut = Planifié · Bas = Réel</span></div>'+
+        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).heures.push({service:\'Nouveau service\',adux:{},reels:{}});savePM();renderPM();})()" class="btn-add">+ Ajouter un service</button>'+
+      '</div>'+
+      '<div class="gantt-wrap" style="margin-bottom:20px">'+
+        '<table class="gantt" style="font-size:11px">'+
+          '<thead><tr style="background:#1d4ed8">'+
+            '<th class="gl" style="color:rgba(255,255,255,.8);font-size:9px;border:1px solid rgba(255,255,255,.15)">SERVICE</th>'+
+            thMois+thQ+
+            '<th style="color:rgba(255,255,255,.8);font-size:9px;border:1px solid rgba(255,255,255,.15);padding:5px 4px">TOTAL</th>'+
+            '<th style="width:24px;border:none"></th>'+
+          '</tr></thead>'+
+          '<tbody>'+(hRows||'<tr><td colspan="20" style="text-align:center;padding:24px;color:#bbb;font-size:12px">Aucun service — cliquez sur <strong>+ Ajouter un service</strong></td></tr>')+'</tbody>'+
+          '<tfoot><tr>'+
+            '<td style="background:#1d4ed8;color:#fff;font-weight:700;font-size:10px;padding:8px 12px;letter-spacing:.06em;text-transform:uppercase">TOTAL HEURES</td>'+
+            hTotMois+hTotQ+
+            '<td style="background:#1d4ed8;color:#fff;font-weight:700;font-family:IBM Plex Mono,monospace;font-size:10px;text-align:center;padding:6px 4px">'+totalHeuresAdux+' h</td>'+
+            '<td style="background:#1d4ed8"></td>'+
+          '</tr></tfoot>'+
+        '</table>'+
       '</div>'+
 
+      '<div class="note" style="margin-bottom:16px">'+
+        '<strong>Astuce :</strong> Cliquez sur les noms de campagnes et d\'audiences pour les modifier. '+
+        'Ligne du haut = Planifié · Ligne du bas = Réel. Les totaux Q1–Q4 se calculent automatiquement.'+
+      '</div>'+
+
+      '<div style="display:flex;justify-content:flex-end">'+
+        '<button onclick="pmDeletePlan('+plan.id+')" style="background:transparent;border:1px solid rgba(212,43,43,.3);color:var(--red);border-radius:6px;padding:8px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">🗑 Supprimer ce plan</button>'+
+      '</div>'+
     '</div>';
 }
+
+
+function pmAddCamp(){ var pl=pmGetActive(); if(!pl) return; pl.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',plateforme:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}}); savePM(); renderPM(); }
+function pmAddService(){ var pl=pmGetActive(); if(!pl) return; pl.heures.push({service:'Nouveau service',adux:{},reels:{}}); savePM(); renderPM(); }
+
 
 function fmtCAD(n){ return n===0?'—':''+n.toLocaleString('fr-CA')+' $'; }
 
 function pmAddCamp(){
-  pmData.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',plateforme:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}});
-  savePM(); renderPM();
+  var plan=pmGetPlan(pmState.editId); if(!plan) return;
+  plan.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',plateforme:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}});
+  savePM(); renderPM(plan);
 }
-function pmDelCamp(i){ pmData.campagnes.splice(i,1); savePM(); renderPM(); }
+function pmDelCamp(i){ var plan=pmGetPlan(pmState.editId); if(!plan) return; plan.campagnes.splice(i,1); savePM(); renderPM(plan); }
 function pmAddService(){
-  pmData.heures.push({service:'Nouveau service',adux:{},reels:{}});
-  savePM(); renderPM();
+  var plan=pmGetPlan(pmState.editId); if(!plan) return;
+  plan.heures.push({service:'Nouveau service',adux:{},reels:{}});
+  savePM(); renderPM(plan);
 }
-function pmDelService(i){ pmData.heures.splice(i,1); savePM(); renderPM(); }
+function pmDelService(i){ var plan=pmGetPlan(pmState.editId); if(!plan) return; plan.heures.splice(i,1); savePM(); renderPM(plan); }
 
 
 // ══════════════════════════════════════════
@@ -3283,7 +3372,7 @@ var NOTE_TYPES = {
   interne:  {label:'Interne',  bg:'#f1f5f9',color:'#64748b',emoji:'💬'},
   autre:    {label:'Autre',    bg:'#f5f0ff',color:'#7c3aed',emoji:'📌'},
 };
-var NOTE_RESPS=['CDP','GC','Stratège','Design','Dev','Vendeur','Direction'];
+var NOTE_RESPS=['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Direction'];
 
 var notesState={filtre:'tous',filtreProj:'tous'};
 
@@ -3936,6 +4025,64 @@ saveTodo = function(){ _origSaveTodo(); sbSaveDebounced(); };
 window.addEventListener('load', function(){
   setTimeout(sbLoad, 800);
 });
+
+
+function buildSettings(){
+  var p = document.getElementById('p-settings'); if(!p) return;
+  p.innerHTML =
+    '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d)"><div class="hero-inner">'+
+      '<div class="hero-tag"><span class="hero-dot"></span>Paramètres</div>'+
+      '<h1>Paramètres <span style="color:var(--red)">ADUX</span></h1>'+
+      '<p class="hero-sub">Gestion des données et configuration</p>'+
+    '</div></div>'+
+    '<div style="max-width:700px;margin:0 auto;padding:32px 40px 80px">'+
+
+      // Supabase status
+      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">🔄 Synchronisation Supabase</div>'+
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+          '<div id="sb-status-full" style="font-size:13px;font-weight:600;color:#555">'+
+            (document.getElementById('sb-status')?document.getElementById('sb-status').textContent:'...')+
+          '</div>'+
+          '<button onclick="sbRefresh();buildSettings()" class="btn-add">🔄 Synchroniser maintenant</button>'+
+        '</div>'+
+        '<div style="font-size:11px;color:#aaa">Les données sont synchronisées automatiquement toutes les 30 secondes entre tous les membres de l\'équipe.</div>'+
+      '</div>'+
+
+      // Export / Import
+      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">💾 Sauvegarde des données</div>'+
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
+          '<button onclick="exportData()" style="display:flex;align-items:center;gap:8px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">⬇ Exporter en JSON</button>'+
+          '<label style="display:flex;align-items:center;gap:8px;background:#f5f4f2;color:#555;border:1px solid #e8e8e8;border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">⬆ Importer un JSON<input type="file" accept=".json" onchange="importData(this)" style="display:none"></label>'+
+        '</div>'+
+        '<div style="font-size:11px;color:#aaa">Exportez vos données en JSON pour une copie de sauvegarde. En cas de problème avec Supabase, vous pouvez restaurer depuis ce fichier.</div>'+
+      '</div>'+
+
+      // Infos
+      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">ℹ️ Informations</div>'+
+        '<div style="display:flex;flex-direction:column;gap:8px">'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
+            '<span style="color:#888">Version</span><span style="font-weight:700">v1.2</span>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
+            '<span style="color:#888">Projets actifs</span><span style="font-weight:700">'+projects.filter(function(p){return !p._archived;}).length+'</span>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
+            '<span style="color:#888">Notes clients</span><span style="font-weight:700">'+notesData.notes.length+'</span>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
+            '<span style="color:#888">Devis</span><span style="font-weight:700">'+devisData.devis.length+'</span>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0">'+
+            '<span style="color:#888">Supabase</span><span style="font-weight:700;font-family:IBM Plex Mono,monospace;font-size:11px;color:#888">lrloencnawphkoctmgec</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+
+    '</div>';
+}
 
 </script>
 </body>
