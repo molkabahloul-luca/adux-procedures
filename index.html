@@ -8,7 +8,7 @@
 <style>
 :root{--red:#D42B2B;--rd:#A82020;--green:#15803d;--blue:#1d4ed8;--gold:#92680a;--bg:#f0f0ee;--grey:#6b7280;--border:rgba(0,0,0,.09)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:#1a1a1a;font-family:'Barlow',sans-serif;font-size:13px;line-height:1.55;min-height:100vh}
+body{background:var(--bg);color:#1a1a1a;font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
 .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
 .sidebar{background:#1e1e1e;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -764,6 +764,7 @@ function SP(id, btn) {
 
 // Init page
 window.addEventListener('DOMContentLoaded', function(){
+  syncClientsToProjects();
   renderProjects();
   initWizard();
   updateCtxBar();
@@ -1697,7 +1698,7 @@ function renderTracker(){
     var bg  = act ? '#d42b2b' : 'rgba(255,255,255,.05)';
     var col = act ? '#fff'    : 'rgba(255,255,255,.45)';
     var fw  = act ? '800'     : '600';
-    return '<th style="min-width:62px;font-size:9px;padding:6px 3px;border:1px solid rgba(255,255,255,.08);background:'+bg+';color:'+col+';font-weight:'+fw+';text-align:center">'+(act?'▶ ':'')+m+'</th>';
+    return '<th style="min-width:80px;font-size:10px;padding:6px 4px;border:1px solid rgba(255,255,255,.08);background:'+bg+';color:'+col+';font-weight:'+fw+';text-align:center">'+(act?'▶ ':'')+m+'</th>';
   }).join('');
 
   // Lignes clients
@@ -1737,15 +1738,15 @@ function renderTracker(){
       }).join('');
 
       return '<td style="padding:3px;border:1px solid rgba(0,0,0,.05);background:'+bgc+'">'+
-        '<div style="display:flex;flex-direction:column;gap:2px;align-items:center;min-width:58px">'+
+        '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;min-width:76px">'+
           '<select data-ci="'+ci+'" data-k="'+k+'" onchange="trSetStatut('+ci+',this.dataset.k,this.value)" '+
-            'style="width:56px;font-size:11px;font-weight:700;border:'+bdr+';border-radius:5px;padding:3px 2px;background:'+st.bg+';color:'+st.color+';cursor:pointer;text-align:center;font-family:Barlow,sans-serif">'+
+            'style="width:74px;font-size:11px;font-weight:700;border:'+bdr+';border-radius:5px;padding:3px 2px;background:'+st.bg+';color:'+st.color+';cursor:pointer;text-align:center;font-family:Barlow,sans-serif">'+
             opts+
           '</select>'+
           (sv ? '<div style="font-size:7px;font-weight:700;color:'+st.color+';text-transform:uppercase;letter-spacing:.03em;white-space:nowrap">'+st.emoji+'</div>' : '')+
           '<input type="text" placeholder="note…" value="'+note.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" '+
             'data-ci="'+ci+'" data-k="'+k+'" onchange="trSetNote('+ci+',this.dataset.k,this.value)" '+
-            'style="width:56px;font-size:8px;border:1px solid #eee;border-radius:3px;padding:1px 4px;color:#777;background:#fafafa;text-align:center;font-family:Barlow,sans-serif">'+
+            'style="width:74px;font-size:8px;border:1px solid #eee;border-radius:3px;padding:1px 4px;color:#777;background:#fafafa;text-align:center;font-family:Barlow,sans-serif">'+
         '</div>'+
       '</td>';
     }).join('');
@@ -1796,7 +1797,6 @@ function renderTracker(){
   p.innerHTML =
     '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d)"><div class="hero-inner">'+
       '<div class="hero-tag"><span class="hero-dot"></span>Gestion · Suivi projet</div>'+
-      '<h1>Suivi <span style="color:var(--red)">projet</span></h1>'+
       '<h1>Suivi <span style="color:var(--red)">projet</span></h1><p class="hero-sub">Statut mensuel par client — avancements, bloquants et notes</p>'+
       '<div style="display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap">'+
         '<div><div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Année</div>'+
@@ -2572,7 +2572,7 @@ function pmNewPlan(){
     client: activeProjs.length ? activeProjs[0].client : 'Nouveau client',
     annee: PM_ANNEE,
     budgetGlobal: 0,
-    tauxAdux: 135,
+    tauxAdux: 175,
     campagnes: [],
     heures: [
       {service:'Planification stratégique', adux:{}, reels:{}},
@@ -2614,7 +2614,7 @@ function renderPMListe(p){
   var cards = plans.length ? plans.map(function(plan){
     var totalCamp = plan.campagnes.reduce(function(a,c){return a+pmSum(c.budgets||{});},0);
     var totalH    = plan.heures.reduce(function(a,h){return a+pmSum(h.adux||{});},0);
-    var budgetAdux= totalH * (plan.tauxAdux||135);
+    var budgetAdux= totalH * (plan.tauxAdux||175);
     return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .18s" onclick="pmOpenPlan('+plan.id+')" class="pm-plan-card">'+
       '<div style="background:linear-gradient(90deg,#1a1a1a,#2a2a2a);padding:16px 20px">'+
         '<div style="font-size:18px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:4px">'+plan.client+'</div>'+
@@ -2658,7 +2658,7 @@ function renderPMPlan(p, plan){
   var totalBudgetCampagnes = plan.campagnes.reduce(function(a,c){return a+pmSum(c.budgets||{});},0);
   var totalHeuresAdux  = plan.heures.reduce(function(a,h){return a+pmSum(h.adux||{});},0);
   var totalHeuresReels = plan.heures.reduce(function(a,h){return a+pmSum(h.reels||{});},0);
-  var budgetAdux = totalHeuresAdux * (plan.tauxAdux||135);
+  var budgetAdux = totalHeuresAdux * (plan.tauxAdux||175);
   var pctUsed = totalHeuresAdux>0?Math.round(totalHeuresReels/totalHeuresAdux*100):0;
   var heuresRestantes = totalHeuresAdux - totalHeuresReels;
 
@@ -2814,7 +2814,7 @@ function renderPMPlan(p, plan){
       '</div>'+
       '<div style="display:flex;gap:20px;flex-wrap:wrap">'+
         '<div><div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">Taux ADUX</div>'+
-          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+(plan.tauxAdux||135)+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).tauxAdux=parseFloat(v)||135;savePM();renderPM();})(this.value)" style="font-size:18px;font-weight:700;color:#60a5fa;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.25);outline:none;width:65px;font-family:IBM Plex Mono,monospace"><span style="color:rgba(255,255,255,.4);font-size:13px">$/h</span></div></div>'+
+          '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+(plan.tauxAdux||175)+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).tauxAdux=parseFloat(v)||135;savePM();renderPM();})(this.value)" style="font-size:18px;font-weight:700;color:#60a5fa;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.25);outline:none;width:65px;font-family:IBM Plex Mono,monospace"><span style="color:rgba(255,255,255,.4);font-size:13px">$/h</span></div></div>'+
         '<div><div style="font-size:9px;color:rgba(255,255,255,.4);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">Budget global</div>'+
           '<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+(plan.budgetGlobal||0)+'" onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).budgetGlobal=parseFloat(v)||0;savePM();renderPM();})(this.value)" style="font-size:18px;font-weight:700;color:#f0abfc;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.25);outline:none;width:100px;font-family:IBM Plex Mono,monospace"><span style="color:rgba(255,255,255,.4);font-size:13px">$</span></div></div>'+
       '</div>'+
@@ -2824,7 +2824,7 @@ function renderPMPlan(p, plan){
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:24px">'+
         '<div class="kpi red"><div class="kl">Budget global</div><div class="kv">'+fmtCAD(plan.budgetGlobal||0)+'</div><div class="ks">total du mandat</div></div>'+
         '<div class="kpi wh"><div class="kl">Budget campagnes</div><div class="kv">'+fmtCAD(totalBudgetCampagnes)+'</div><div class="ks">médias publicitaires</div></div>'+
-        '<div class="kpi bl"><div class="kl">Budget ADUX</div><div class="kv">'+fmtCAD(budgetAdux)+'</div><div class="ks">'+totalHeuresAdux+' h × '+(plan.tauxAdux||135)+'$/h</div></div>'+
+        '<div class="kpi bl"><div class="kl">Budget ADUX</div><div class="kv">'+fmtCAD(budgetAdux)+'</div><div class="ks">'+totalHeuresAdux+' h × '+(plan.tauxAdux||175)+'$/h</div></div>'+
         '<div class="kpi '+(pctUsed>=80?'red':'gr')+'"><div class="kl">Heures réalisées</div><div class="kv">'+totalHeuresReels+' h</div><div class="ks">'+pctUsed+'% du plan</div></div>'+
         '<div class="kpi gy"><div class="kl">Heures restantes</div><div class="kv">'+heuresRestantes+' h</div><div class="ks">'+(heuresRestantes<0?'⚠ Dépassement':'Disponibles')+'</div></div>'+
       '</div>'+
@@ -3200,8 +3200,8 @@ function buildDevis(){ renderDevis(); }
 function dvNew(){
   var num=String(devisData.nextNum).padStart(3,'0'); devisData.nextNum++;
   var dv={id:Date.now(),numero:'DEV-'+num,client:'',projId:null,statut:'brouillon',
-    dateCreation:new Date().toLocaleDateString('fr-CA'),dateEnvoi:'',dateExpiration:'',notes:'',taux:135,
-    lignes:[{service:'Planification stratégique',desc:'',qte:5,taux:135},{service:'Gestion de projet',desc:'',qte:10,taux:135}]};
+    dateCreation:new Date().toLocaleDateString('fr-CA'),dateEnvoi:'',dateExpiration:'',notes:'',taux:175,
+    lignes:[{service:'Planification stratégique',desc:'',qte:5,taux:175},{service:'Gestion de projet',desc:'',qte:10,taux:175}]};
   devisData.devis.unshift(dv); saveDevis();
   dvState.vue='edit'; dvState.editId=dv.id; renderDevis();
 }
@@ -3221,7 +3221,7 @@ function dvSetLine(id,li,field,val){
 }
 function dvAddLine(id){
   var d=devisData.devis.find(function(x){return x.id===id;}); if(!d) return;
-  d.lignes.push({service:'Nouveau service',desc:'',qte:1,taux:d.taux||135});
+  d.lignes.push({service:'Nouveau service',desc:'',qte:1,taux:d.taux||175});
   saveDevis(); renderDevis();
 }
 function dvDelLine(id,li){
@@ -3977,6 +3977,7 @@ function sbLoad(){
     sbLastSync = new Date();
     if(indicator) indicator.textContent = '✓ Synchro ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
     // Re-render current panel
+    syncClientsToProjects();
     renderProjects();
     updateNotifBadge();
     updateCtxBar();
@@ -4138,6 +4139,75 @@ function buildSettings(){
       '</div>'+
 
     '</div>';
+}
+
+
+// ══════════════════════════════════════════
+//  SYNC — Créer projets + BH pour tous les clients trData
+// ══════════════════════════════════════════
+function syncClientsToProjects(){
+  var changed = false;
+  (trData.clients||[]).forEach(function(c){
+    // Chercher projet existant par nom
+    var existing = projects.find(function(p){
+      return p.client && p.client.toLowerCase() === c.nom.toLowerCase() && !p._archived;
+    });
+    if(!existing){
+      // Créer projet minimal
+      var proj = {
+        id: Date.now() + Math.floor(Math.random()*10000),
+        client: c.nom,
+        role: 'cdp',
+        types: ['onb'],
+        date: new Date().toLocaleDateString('fr-CA'),
+        _fromSync: true
+      };
+      projects.push(proj);
+      existing = proj;
+      changed = true;
+    }
+    // Créer BH si pas encore là
+    var bh = getBHClient(existing.id);
+    if(bh.totalH === 0 && c.banqueH){
+      // Parser le totalH depuis banqueH
+      var match = c.banqueH.match(/^(\d+)/);
+      if(match) bh.totalH = parseInt(match[1]);
+      if(c.heuresMois) bh.heuresMois = c.heuresMois;
+      bh.statut = c.statut;
+      bh.agence = c.agence;
+      bh.idClient = c.id;
+      bh.num = c.num;
+      changed = true;
+    }
+    // Lier le projet au client trData
+    if(!c.projId) c.projId = existing.id;
+    // Créer plan média vide si pas encore là
+    var existingPlan = pmData.plans.find(function(pl){
+      return pl.client && pl.client.toLowerCase() === c.nom.toLowerCase();
+    });
+    if(!existingPlan){
+      pmData.plans.push({
+        id: Date.now() + Math.floor(Math.random()*100000),
+        projId: existing ? existing.id : null,
+        client: c.nom,
+        annee: new Date().getFullYear(),
+        budgetGlobal: 0,
+        tauxAdux: 175,
+        campagnes: [],
+        heures: [
+          {service:'Planification stratégique',adux:{},reels:{}},
+          {service:'Gestion de projet',adux:{},reels:{}},
+        ]
+      });
+      changed = true;
+    }
+  });
+  if(changed){
+    saveProjects();
+    saveBHC();
+    saveTR();
+    savePM();
+  }
 }
 
 </script>
