@@ -559,7 +559,6 @@ tfoot td.r{text-align:right}
     <div class="nav-label">Principal</div>
     <button class="nav-btn active" onclick="SP('home',this)"><span class="nav-icon">🏠</span><span>Accueil</span></button>
     <button class="nav-btn" onclick="SP('todo',this)"><span class="nav-icon">☑️</span><span>To-do</span></button>
-    <button class="nav-btn" onclick="SP('dashboard',this)"><span class="nav-icon">🎯</span><span>Dashboard</span></button>
     <button class="nav-btn" onclick="SP('checklists',this)"><span class="nav-icon">✅</span><span>Checklists</span></button>
   </div>
   <!-- Checklists accessibles uniquement via les projets -->
@@ -589,12 +588,12 @@ tfoot td.r{text-align:right}
 
 <!-- CONTENT -->
 <!-- BARRE CONTEXTE PROJET -->
-<div id="ctx-proj-bar" style="display:none;position:fixed;top:0;left:220px;right:0;z-index:100;background:linear-gradient(90deg,#d42b2b,#a82020);padding:8px 20px;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)">
-  <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6)">Projet actif</span>
-  <span style="width:1px;height:14px;background:rgba(255,255,255,.2)"></span>
-  <span id="ctx-proj-name" style="font-size:13px;font-weight:900;color:#fff;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px"></span>
-  <span style="font-size:10px;color:rgba(255,255,255,.55)" id="ctx-proj-mods"></span>
-  <button onclick="ctxProj=null;updateCtxBar();SP('home',null)" style="margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:5px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;letter-spacing:.04em">✕ Quitter le projet</button>
+<div id="ctx-proj-bar" style="display:none;position:fixed;top:0;left:220px;right:0;z-index:100;background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:6px 24px;align-items:center;gap:8px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+  <button onclick="ctxProj=null;updateCtxBar();SP('home',null)" style="background:transparent;border:none;color:#888;cursor:pointer;font-size:12px;font-weight:700;font-family:Barlow,sans-serif;padding:0;display:flex;align-items:center;gap:4px">🏠 Accueil</button>
+  <span style="font-size:12px;color:#ccc">›</span>
+  <span id="ctx-proj-name" style="font-size:12px;font-weight:700;color:#1a1a1a;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px"></span>
+  <span style="font-size:10px;color:#aaa;margin-left:4px" id="ctx-proj-mods"></span>
+  <button onclick="ctxProj=null;updateCtxBar();SP('home',null)" style="margin-left:auto;background:transparent;border:1px solid #e8e8e8;color:#888;border-radius:5px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">✕ Quitter</button>
 </div>
 
 <div class="content" id="content">
@@ -606,45 +605,18 @@ tfoot td.r{text-align:right}
       <div class="hero-tag"><span class="hero-dot"></span>Procédures internes · v1.2</div>
       <h1>Procédures<br><span style="color:var(--red)">Adux</span></h1>
       <p class="hero-sub">Gérez vos projets clients et accédez à vos outils</p>
-
+      <button onclick="ouvrirModalProjet()" style="margin-top:14px;background:#d42b2b;color:#fff;border:none;border-radius:7px;padding:10px 24px;font-size:13px;font-weight:800;cursor:pointer;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:8px">+ Nouveau client</button>
     </div>
   </div>
   <div class="home-wrap">
     <div class="wizard">
-      <div class="wiz-title">🚀 Nouveau projet</div>
+      <div class="wiz-title">🚀 Nouveau client</div>
       <div class="wiz-sub">Entrez le nom du client, choisissez un template et créez le projet.</div>
       <div class="wiz-row" style="margin-bottom:16px">
         <div class="wiz-grp" style="flex:2"><label class="wiz-lbl">Nom du client</label><input class="wiz-inp" type="text" id="wiz-client" placeholder="ex: Groupe TAQ…"></div>
-        <div class="wiz-grp"><label class="wiz-lbl">Responsable</label><select class="wiz-inp" id="wiz-role"><option value="patrice">Patrice</option><option value="francis">Francis</option><option value="molka">Molka</option><option value="megraton">Marie-Ève Graton</option><option value="meboucher">Marie-Ève Boucher</option><option value="charleseric">Charles-Éric</option></select></div>
+        <div class="wiz-grp"><label class="wiz-lbl">Responsable</label><select class="wiz-inp" id="wiz-role"><option value="patrice">Patrice</option><option value="francis">Francis</option><option value="molka">Molka</option><option value="natalia">Natalia</option><option value="megraton">Marie-Ève Graton</option><option value="meboucher">Marie-Ève Boucher</option><option value="charleseric">Charles-Éric</option></select></div>
       </div>
-      <div class="wiz-lbl" style="margin-bottom:10px">Type de mandat</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:18px" id="tpl-btns">
-        <button onclick="applyTemplate('ads')" class="tpl-card">
-          <div class="tpl-icon">⚡</div><div class="tpl-name">Ads complet</div>
-          <div class="tpl-mods">Onboarding · Meta · Google · BH</div>
-        </button>
-        <button onclick="applyTemplate('meta')" class="tpl-card">
-          <div class="tpl-icon">📘</div><div class="tpl-name">Meta Ads</div>
-          <div class="tpl-mods">Onboarding · Meta · BH</div>
-        </button>
-        <button onclick="applyTemplate('google')" class="tpl-card">
-          <div class="tpl-icon">🔍</div><div class="tpl-name">Google Ads</div>
-          <div class="tpl-mods">Onboarding · Google · BH</div>
-        </button>
-        <button onclick="applyTemplate('web')" class="tpl-card">
-          <div class="tpl-icon">🌐</div><div class="tpl-name">Site web</div>
-          <div class="tpl-mods">Onboarding · Web</div>
-        </button>
-        <button onclick="applyTemplate('seo')" class="tpl-card">
-          <div class="tpl-icon">📈</div><div class="tpl-name">SEO + Contenu</div>
-          <div class="tpl-mods">Onboarding · SEO · Contenu</div>
-        </button>
-        <button onclick="applyTemplate('full')" class="tpl-card">
-          <div class="tpl-icon">🎯</div><div class="tpl-name">Mandat complet</div>
-          <div class="tpl-mods">Tous les modules</div>
-        </button>
-      </div>
-      <div class="wiz-lbl" style="margin-bottom:8px">Personnaliser les modules</div>
+      <div class="wiz-lbl" style="margin-bottom:8px">Type de mandat</div>
       <div class="wiz-types" id="wiz-types">
         <label class="wiz-type sel"><input type="checkbox" checked value="onb"><span>🤝</span><div><div class="wiz-type-lbl">Onboarding</div><div class="wiz-type-desc">Accès & mise en place</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="bhproc"><span>🏦</span><div><div class="wiz-type-lbl">Banque d'heures</div><div class="wiz-type-desc">Procédure complète</div></div></label>
@@ -654,10 +626,14 @@ tfoot td.r{text-align:right}
         <label class="wiz-type"><input type="checkbox" value="seo"><span>📈</span><div><div class="wiz-type-lbl">SEO</div><div class="wiz-type-desc">Référencement</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="contenu"><span>✍️</span><div><div class="wiz-type-lbl">Contenu</div><div class="wiz-type-desc">Rédaction</div></div></label>
       </div>
-      <div style="display:flex;justify-content:flex-end"><button class="wiz-btn" onclick="createProject()">Créer le projet →</button></div>
+      <div style="display:flex;justify-content:flex-end"><button class="wiz-btn" onclick="createProject()">Créer le client →</button></div>
     </div>
     <div class="proj-section">
-      <div class="proj-hdr"><div class="proj-title">Projets actifs</div></div>
+      <div class="proj-hdr" style="gap:12px">
+        <div class="proj-title">Projets actifs</div>
+        <input type="text" id="proj-search" placeholder="🔍 Filtrer par client..." oninput="renderProjects()"
+          style="flex:1;max-width:280px;padding:5px 12px;border:1px solid #e8e8e8;border-radius:20px;font-size:12px;font-family:Barlow,sans-serif;outline:none;color:#555">
+      </div>
       <div class="proj-grid" id="proj-grid"></div>
       <div id="archived-section" style="display:none;margin-top:28px">
         <div class="proj-hdr" style="margin-bottom:10px">
@@ -727,7 +703,7 @@ function SP(id, btn) {
   if (c) c.scrollTo(0,0);
 
   // Initialiser le module si nécessaire
-  if (id==='home')                          { ctxProj=null; updateCtxBar(); renderProjects(); initWizard(); }
+  if (id==='home')                          { ctxProj=null; updateCtxBar(); renderHomeWithDashboard(); initWizard(); }
   // Checklists : bloquer sans projet actif
   var CL_IDS = ['onb','bhproc','meta','goo','web','seo','contenu'];
   if (CL_IDS.indexOf(id) > -1) {
@@ -814,20 +790,23 @@ function createProject(){
 
 function renderProjects(){
   var g = document.getElementById('proj-grid'); if(!g) return;
-  var active = (window.archivedProjects = window.archivedProjects||[]) && projects.filter(function(p){return !p._archived;});
+  var searchQ = (document.getElementById('proj-search')||{}).value||'';
+  var active = (window.archivedProjects = window.archivedProjects||[]) && projects.filter(function(p){
+    return !p._archived && (!searchQ || p.client.toLowerCase().indexOf(searchQ.toLowerCase())>-1);
+  });
   if(!active.length){ g.innerHTML='<div class="proj-no">Aucun projet actif — créez-en un ou importez vos données.</div>'; }
   else {
     g.innerHTML = active.map(function(p){
       var i = projects.indexOf(p);
       var tags = p.types.map(function(t){return '<span class="proj-tag">'+(TL[t]||t)+'</span>';}).join('');
       var btns = p.types.map(function(t){return '<button class="proj-mod-btn" onclick="openMod('+i+',\''+t+'\')">'+( TI[t]||'')+ ' '+(TL[t]||t)+'</button>';}).join('');
-      return '<div class="proj-card">'+
+      return '<div class="proj-card" onclick="showProjet('+i+')" style="cursor:pointer" title="Ouvrir la fiche client">'+
         '<div class="proj-top">'+
-          '<div class="proj-name" onclick="showProjet('+i+')" style="cursor:pointer" title="Voir la fiche projet">'+p.client+'</div>'+
+          '<div class="proj-name">'+p.client+'</div>'+
           '<div style="display:flex;gap:3px">'+
-            '<button class="proj-del" title="Dupliquer" onclick="dupProj('+i+')" style="color:#888;font-size:12px;padding:2px 7px;border-radius:4px" title="Dupliquer">⧉</button>'+
-            '<button class="proj-del" title="Archiver" onclick="archiveProj('+i+')" style="color:#888;font-size:12px;padding:2px 7px;border-radius:4px">📦</button>'+
-            '<button class="proj-del" onclick="delProj('+i+')" style="border-radius:4px">✕</button>'+
+            '<button class="proj-del" title="Dupliquer" onclick="event.stopPropagation();dupProj('+i+')" style="color:#888;font-size:12px;padding:2px 7px;border-radius:4px">⧉</button>'+
+            '<button class="proj-del" title="Archiver" onclick="event.stopPropagation();archiveProj('+i+')" style="color:#888;font-size:12px;padding:2px 7px;border-radius:4px">📦</button>'+
+            '<button class="proj-del" onclick="event.stopPropagation();delProj('+i+')" style="border-radius:4px">✕</button>'+
           '</div>'+
         '</div>'+
         '<div class="proj-tags" style="margin-bottom:10px">'+tags+'</div>'+
@@ -1229,7 +1208,7 @@ function updateCtxBar(){
   if(ctxProj){
     // Barre rouge en haut
     bar.style.display = 'flex';
-    if(contentEl) contentEl.style.paddingTop='36px';
+    if(contentEl) contentEl.style.paddingTop='32px';
     document.getElementById('ctx-proj-name').textContent = ctxProj.client;
     var mods = (ctxProj.types||[]).map(function(t){ return CL_LABELS_MAP[t]||t; }).join(' · ');
     document.getElementById('ctx-proj-mods').textContent = mods;
@@ -1495,7 +1474,7 @@ var BHP_DATA = [
     {divider:'Étape 6 — CDP · Planification'},
     {l:'Gantt complet bâti dans Odoo (tâches, responsables, échéances, heures)',r:['cdp']},
     {l:'Plan média préparé en lien avec la stratégie approuvée',r:['cdp']},
-    {l:'Projet visible et configuré dans le tableau de bord (accès, colonnes, alertes)',r:['cdp']},
+    {l:'Projet visible et configuré dans le accueil (accès, colonnes, alertes)',r:['cdp']},
     {l:'Équipe confirmée via Slack : projet lancé, suivi hebdo commence',r:['cdp']},
   ]},
 
@@ -1505,7 +1484,7 @@ var BHP_DATA = [
     {divider:'Étape 1 — CDP · Suivi des heures'},
     {l:'Heures consommées vs heures planifiées vérifiées dans Odoo',r:['cdp']},
     {l:'Tâches en retard ou à risque de dépassement identifiées',r:['cdp']},
-    {l:'Tableau de bord centralisé mis à jour',r:['cdp']},
+    {l:'Accueil centralisé mis à jour',r:['cdp']},
     {l:'Stratège avisé via Slack si ajustements de priorités nécessaires',r:['cdp']},
 
     {divider:'Étape 2 — Stratège · Suivi de la livraison'},
@@ -1526,7 +1505,7 @@ var BHP_DATA = [
     {divider:'Étape 1 — CDP · Bilan de performance'},
     {l:'Rapport de performance mensuel extrait d\'Odoo (heures, tâches, solde BH)',r:['cdp']},
     {l:'Résultats compilés et consignés dans le Google Doc de suivi (Drive)',r:['cdp']},
-    {l:'Tableau de bord centralisé mis à jour',r:['cdp']},
+    {l:'Accueil centralisé mis à jour',r:['cdp']},
     {l:'Bilan partagé avec le Stratège via Slack avant la révision',r:['cdp']},
 
     {divider:'Étape 2 — Stratège · Révision de la stratégie'},
@@ -1590,7 +1569,7 @@ var BHP_DATA = [
 
     {divider:'Étape 2 — Direction · Orientation'},
     {l:'Type de renouvellement déterminé avec CDP et Stratège',r:['dir','cdp','strat'],w:'Même stratégie → reprendre Phase 1 à l\'Étape 2. Nouvelle stratégie → reprendre Phase 1 au complet'},
-    {l:'Nouveau projet Odoo créé (lié au projet précédent, nouveau numéro de mandat)',r:['dir']},
+    {l:'Nouveau client Odoo créé (lié au projet précédent, nouveau numéro de mandat)',r:['dir']},
     {l:'CDP et Stratège avisés du démarrage et du parcours retenu',r:['dir']},
   ]},
 ];
@@ -1614,7 +1593,7 @@ var TR_STATUTS = [
   {val:'cours', label:'En cours',    bg:'#dbeafe', color:'#1d4ed8', emoji:'🔵'},
 ];
 var TR_PLATF = ['Meta Ads','Google Ads','LinkedIn Ads','Meta + Google','SEO','Contenu','Site web','Banque d\'heures','Autre'];
-var TR_RESPS = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
+var TR_RESPS = ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
 
 var trData = {
   annee: new Date().getFullYear(),
@@ -1702,7 +1681,14 @@ function renderTracker(){
   }).join('');
 
   // Lignes clients
-  var rows = trData.clients.map(function(c,ci){
+  var trRespFilter = (document.getElementById('tr-filter-resp')||{}).value||'';
+  var rows = trData.clients.filter(function(c){
+    if(trRespFilter && c.responsable !== trRespFilter) return false;
+    if(!trActiveFilters.length) return true;
+    var sv=(c.statuts||{})[TR_MOIS_KEYS[mActif]]||'vide';
+    if(sv==='') sv='vide';
+    return trActiveFilters.indexOf(sv)>-1;
+  }).map(function(c,ci){
 
     var platColors = {'Meta Ads':'#1877F2','Google Ads':'#34A853','LinkedIn Ads':'#0a66c2','YouTube Ads':'#c00','TikTok Ads':'#69C9D0','Email':'#7c3aed','Google SEO':'#f59e0b','Autre':'#888'};
     var pc = platColors[c.plateforme]||'#888';
@@ -1723,70 +1709,94 @@ function renderTracker(){
     // Responsable options
     var respOpts = TR_RESPS.map(function(r){return '<option value="'+r+'"'+(r===c.responsable?' selected':'')+'>'+r+'</option>';}).join('');
 
-    // Cellules statut par mois
-    var moisCells = TR_MOIS_KEYS.map(function(k,mi){
-      var sv  = (c.statuts||{})[k]||'';
-      var st  = trStatut(sv);
-      var act = mi===mActif;
-      var note= (c.notes||{})[k]||'';
-      var bdr = act ? '2px solid rgba(212,43,43,.4)' : '1px solid '+( sv ? st.color+'55' : '#e8e8e8');
-      var bgc = act ? 'rgba(212,43,43,.03)'           : 'transparent';
+    // Cellules statut par mois — MULTI-PLATEFORME
+    var plateformes = c.plateformes && c.plateformes.length ? c.plateformes : [c.plateforme||'Meta Ads'];
+    var platColors = {'Meta Ads':'#1877F2','Google Ads':'#34A853','LinkedIn Ads':'#0a66c2','YouTube Ads':'#c00','TikTok Ads':'#69C9D0','Email':'#7c3aed','Google SEO':'#f59e0b','SEO':'#f59e0b','Contenu':'#10b981','Site web':'#6366f1','Banque d\'heures':'#d42b2b','Autre':'#888'};
 
-      // Build option list without emojis in value to avoid parsing issues
-      var opts = TR_STATUTS.map(function(s){
-        return '<option value="'+s.val+'"'+(s.val===sv?' selected':'')+'>'+s.label+'</option>';
+    // Générer une ligne par plateforme
+    var platRows = plateformes.map(function(plat, pi){
+      var platStatuts = (c.statutsP&&c.statutsP[plat]) ? c.statutsP[plat] : (pi===0?(c.statuts||{}):{});
+      var platNotes   = (c.notesP&&c.notesP[plat])     ? c.notesP[plat]   : (pi===0?(c.notes||{}):{});
+      var pc2 = platColors[plat]||'#888';
+      var sv  = platStatuts[TR_MOIS_KEYS[mActif]]||'';
+
+      var moisCells2 = TR_MOIS_KEYS.map(function(k,mi){
+        var sv2  = platStatuts[k]||'';
+        var st2  = trStatut(sv2);
+        var act2 = mi===mActif;
+        var note2= platNotes[k]||'';
+        var bdr2 = act2 ? '2px solid rgba(212,43,43,.4)' : '1px solid '+(sv2?st2.color+'55':'#e8e8e8');
+        var bgc2 = act2 ? 'rgba(212,43,43,.03)' : 'transparent';
+        var opts2 = TR_STATUTS.map(function(s){
+          return '<option value="'+s.val+'"'+(s.val===sv2?' selected':'')+'>'+s.label+'</option>';
+        }).join('');
+        return '<td style="padding:3px;border:1px solid rgba(0,0,0,.05);background:'+bgc2+'">'+
+          '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;min-width:76px">'+
+            '<select onchange="trSetStatut('+ci+',\''+k+'\',\''+plat+'\',this.value)" '+
+              'style="width:74px;font-size:11px;font-weight:700;border:'+bdr2+';border-radius:5px;padding:3px 2px;background:'+st2.bg+';color:'+st2.color+';cursor:pointer;text-align:center;font-family:Barlow,sans-serif">'+
+              opts2+
+            '</select>'+
+            (sv2?'<div style="font-size:7px;font-weight:700;color:'+st2.color+';text-transform:uppercase;letter-spacing:.03em;white-space:nowrap">'+st2.emoji+'</div>':'')+
+            '<input type="text" placeholder="note…" value="'+note2.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" '+
+              'onchange="trSetNote('+ci+',\''+k+'\',\''+plat+'\',this.value)" '+
+              'style="width:74px;font-size:8px;border:1px solid #eee;border-radius:3px;padding:1px 4px;color:#777;background:#fafafa;text-align:center;font-family:Barlow,sans-serif">'+
+          '</div>'+
+        '</td>';
       }).join('');
 
-      return '<td style="padding:3px;border:1px solid rgba(0,0,0,.05);background:'+bgc+'">'+
-        '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;min-width:76px">'+
-          '<select data-ci="'+ci+'" data-k="'+k+'" onchange="trSetStatut('+ci+',this.dataset.k,this.value)" '+
-            'style="width:74px;font-size:11px;font-weight:700;border:'+bdr+';border-radius:5px;padding:3px 2px;background:'+st.bg+';color:'+st.color+';cursor:pointer;text-align:center;font-family:Barlow,sans-serif">'+
-            opts+
+      var isFirst = pi===0;
+      var platSelect = '<select onchange="trAddPlateforme('+ci+',this.value);this.value=\'\'" '+
+        'style="font-size:9px;border:1px dashed #ccc;border-radius:4px;padding:2px 4px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif;color:#888;margin-top:4px">'+
+        '<option value="">+ Plateforme</option>'+
+        TR_PLATF.filter(function(p){return plateformes.indexOf(p)===-1;}).map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('')+
+      '</select>';
+      var removeBtn = plateformes.length>1 ?
+        '<button onclick="trRemovePlateforme('+ci+',\''+plat+'\');event.stopPropagation()" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:10px;padding:0 2px" title="Retirer">✕</button>' : '';
+
+      return '<tr style="border-bottom:'+(pi===plateformes.length-1?'2px solid rgba(0,0,0,.1)':'1px dashed rgba(0,0,0,.04)')+'">'+
+        (isFirst ?
+          '<td rowspan="'+plateformes.length+'" style="padding:8px 14px;border:1px solid rgba(0,0,0,.05);min-width:200px;vertical-align:top">'+
+            '<div style="font-size:10px;font-family:IBM Plex Mono,monospace;color:#bbb;margin-bottom:2px">'+c.id+' · '+c.num+'</div>'+
+            '<div style="font-size:13px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;color:#1a1a1a" contenteditable onblur="trData.clients['+ci+'].nom=this.textContent;saveTR()">'+c.nom+'</div>'+
+            '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">'+
+              '<span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:3px;background:'+trStatutColor(c.statut,'bg')+';color:'+trStatutColor(c.statut,'col')+'" contenteditable onblur="trData.clients['+ci+'].statut=this.textContent;saveTR()">'+c.statut+'</span>'+
+              '<span style="font-size:9px;background:#f0f0ee;color:#555;padding:1px 7px;border-radius:3px;font-weight:600">'+c.agence+'</span>'+
+              (c.banqueH?'<span style="font-size:9px;background:#fff0f0;color:var(--red);padding:1px 7px;border-radius:3px;font-weight:700">🏦 '+c.banqueH+'</span>':'')+
+              (c.heuresMois?'<span style="font-size:9px;background:#f0f4ff;color:#1d4ed8;padding:1px 7px;border-radius:3px;font-weight:700">⏱ '+c.heuresMois+'h/mois</span>':'')+
+            '</div>'+
+
+            platSelect+
+            '<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">'+badges+'</div>'+
+          '</td>'
+        : '')+
+        '<td style="padding:5px 8px;border:1px solid rgba(0,0,0,.05);min-width:160px">'+
+          '<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">'+
+            '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+pc2+'22;color:'+pc2+'">'+plat+'</span>'+
+            removeBtn+
+          '</div>'+
+          '<select onchange="(function(v){var cl=trData.clients['+ci+'];if(!cl.respP)cl.respP={};cl.respP[\''+plat+'\'] =v;saveTR();})(this.value)" '+
+            'style="font-size:10px;font-weight:600;border:1px solid #e8e8e8;border-radius:4px;padding:2px 6px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif;width:100%">'+
+            '<option value="">— Responsable —</option>'+
+            ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'].map(function(r){
+              var sel = (c.respP&&c.respP[plat])===r?' selected':'';
+              return '<option value="'+r+'"'+sel+'>'+r+'</option>';
+            }).join('')+
           '</select>'+
-          (sv ? '<div style="font-size:7px;font-weight:700;color:'+st.color+';text-transform:uppercase;letter-spacing:.03em;white-space:nowrap">'+st.emoji+'</div>' : '')+
-          '<input type="text" placeholder="note…" value="'+note.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" '+
-            'data-ci="'+ci+'" data-k="'+k+'" onchange="trSetNote('+ci+',this.dataset.k,this.value)" '+
-            'style="width:74px;font-size:8px;border:1px solid #eee;border-radius:3px;padding:1px 4px;color:#777;background:#fafafa;text-align:center;font-family:Barlow,sans-serif">'+
-        '</div>'+
-      '</td>';
+        '</td>'+
+        '<td style="padding:5px 8px;border:1px solid rgba(0,0,0,.05);min-width:80px">'+
+          (isFirst?
+            '<div style="display:flex;align-items:center;gap:3px">'+
+              '<input type="number" min="0" value="'+c.budget+'" onchange="trData.clients['+ci+'].budget=parseFloat(this.value)||0;saveTR()" '+
+                'style="width:60px;font-size:11px;font-weight:700;font-family:IBM Plex Mono,monospace;border:1px solid #e8e8e8;border-radius:4px;padding:3px 5px;background:#f5f4f2;text-align:right">'+
+              '<span style="font-size:9px;color:#888">$</span>'+
+            '</div>' : '')+
+        '</td>'+
+        moisCells2+
+        (isFirst?'<td rowspan="'+plateformes.length+'" style="padding:4px;border:none;text-align:center;vertical-align:top"><button onclick="trDelClient('+ci+')" style="background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px">✕</button></td>':'<td style="border:none"></td>')+
+      '</tr>';
     }).join('');
 
-    return '<tr style="border-bottom:1px solid rgba(0,0,0,.05)">'+
-      '<td style="padding:8px 14px;border:1px solid rgba(0,0,0,.05);min-width:200px">'+
-        '<div style="font-size:10px;font-family:IBM Plex Mono,monospace;color:#bbb;margin-bottom:2px">'+c.id+' · '+c.num+'</div>'+
-        '<div style="font-size:13px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;color:#1a1a1a" contenteditable onblur="trData.clients['+ci+'].nom=this.textContent;saveTR()">'+c.nom+'</div>'+
-        '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">'+
-          '<span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:3px;background:'+trStatutColor(c.statut,'bg')+';color:'+trStatutColor(c.statut,'col')+'" contenteditable onblur="trData.clients['+ci+'].statut=this.textContent;saveTR()">'+c.statut+'</span>'+
-          '<span style="font-size:9px;background:#f0f0ee;color:#555;padding:1px 7px;border-radius:3px;font-weight:600">'+c.agence+'</span>'+
-          (c.banqueH?'<span style="font-size:9px;background:#fff0f0;color:var(--red);padding:1px 7px;border-radius:3px;font-weight:700">🏦 '+c.banqueH+'</span>':'')+
-          (c.heuresMois?'<span style="font-size:9px;background:#f0f4ff;color:#1d4ed8;padding:1px 7px;border-radius:3px;font-weight:700">⏱ '+c.heuresMois+'h/mois</span>':'')+
-        '</div>'+
-        '<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">'+badges+'</div>'+
-      '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.05);min-width:130px">'+
-        '<select onchange="trData.clients['+ci+'].plateforme=this.value;saveTR();renderTracker()" '+
-          'style="font-size:11px;font-weight:700;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;width:100%;background:'+pc+'22;color:'+pc+';font-family:Barlow,sans-serif">'+
-          platOpts+
-        '</select>'+
-      '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.05);min-width:110px">'+
-        '<div style="display:flex;align-items:center;gap:4px">'+
-          '<input type="number" min="0" value="'+c.budget+'" onchange="trData.clients['+ci+'].budget=parseFloat(this.value)||0;saveTR()" '+
-            'style="width:80px;font-size:12px;font-weight:700;font-family:IBM Plex Mono,monospace;border:1px solid #e8e8e8;border-radius:4px;padding:4px 6px;background:#f5f4f2;text-align:right">'+
-          '<span style="font-size:10px;color:#888">$</span>'+
-        '</div>'+
-      '</td>'+
-      '<td style="padding:8px 10px;border:1px solid rgba(0,0,0,.05);min-width:100px">'+
-        '<select onchange="trData.clients['+ci+'].responsable=this.value;saveTR()" '+
-          'style="font-size:11px;font-weight:700;border:1px solid #e8e8e8;border-radius:5px;padding:4px 8px;background:#fff;cursor:pointer;width:100%;font-family:Barlow,sans-serif">'+
-          respOpts+
-        '</select>'+
-      '</td>'+
-      moisCells+
-      '<td style="padding:4px 6px;border:none;text-align:center">'+
-        '<button onclick="trDelClient('+ci+')" style="background:transparent;border:none;color:#ccc;cursor:pointer;font-size:15px" title="Supprimer">✕</button>'+
-      '</td>'+
-    '</tr>';
+    return platRows;
   }).join('');
 
   // Légende statuts
@@ -1809,19 +1819,29 @@ function renderTracker(){
     '<div style="max-width:1700px;margin:0 auto;padding:24px 32px 80px">'+
 
       // Stats bar
-      '<div class="stat-bar" style="margin-bottom:20px">'+
-        '<div class="stat"><span class="stat-dot" style="background:#16a34a;box-shadow:0 0 5px #16a34a40"></span><span class="lbl">Optimisés</span><span class="val" style="color:#16a34a;font-weight:800">'+counts.ok+'</span></div>'+
-        '<div class="stat"><span class="stat-dot" style="background:#1d4ed8"></span><span class="lbl">En cours</span><span class="val" style="color:#1d4ed8;font-weight:800">'+counts.cours+'</span></div>'+
-        '<div class="stat"><span class="stat-dot" style="background:#b45309"></span><span class="lbl">Bloquants</span><span class="val" style="color:#b45309;font-weight:800">'+counts.bloc+'</span></div>'+
-        '<div class="stat"><span class="stat-dot" style="background:#dc2626"></span><span class="lbl">Non faits</span><span class="val" style="color:#dc2626;font-weight:800">'+counts.non+'</span></div>'+
-        '<div class="stat"><span class="stat-dot" style="background:#64748b"></span><span class="lbl">En pause</span><span class="val" style="color:#64748b;font-weight:800">'+counts.pause+'</span></div>'+
-        '<div class="stat"><span class="stat-dot" style="background:#ddd"></span><span class="lbl">Sans statut</span><span class="val" style="color:#bbb;font-weight:800">'+counts.vide+'</span></div>'+
-        '<div style="margin-left:auto;display:flex;align-items:center;gap:8px">'+
-          '<span style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Mois actif :</span>'+
-          '<select onchange="trData.moisActif=parseInt(this.value);saveTR();renderTracker()" '+
-            'style="font-size:12px;font-weight:700;border:1px solid #e8e8e8;border-radius:5px;padding:5px 10px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif">'+
-            moisOpts+
-          '</select>'+
+      '<div class="stat-bar" style="margin-bottom:20px;flex-wrap:wrap;gap:6px">'+
+        '<button onclick="trToggleFilter(\'ok\')" class="tr-filter-btn" data-val="ok" style="'+trFilterStyle('ok',counts.ok,'#16a34a')+'">✅ Optimisés <strong>'+counts.ok+'</strong></button>'+
+        '<button onclick="trToggleFilter(\'cours\')" class="tr-filter-btn" data-val="cours" style="'+trFilterStyle('cours',counts.cours,'#1d4ed8')+'">● En cours <strong>'+counts.cours+'</strong></button>'+
+        '<button onclick="trToggleFilter(\'bloc\')" class="tr-filter-btn" data-val="bloc" style="'+trFilterStyle('bloc',counts.bloc,'#b45309')+'">⚠ Bloquants <strong>'+counts.bloc+'</strong></button>'+
+        '<button onclick="trToggleFilter(\'non\')" class="tr-filter-btn" data-val="non" style="'+trFilterStyle('non',counts.non,'#dc2626')+'">✕ Non faits <strong>'+counts.non+'</strong></button>'+
+        '<button onclick="trToggleFilter(\'pause\')" class="tr-filter-btn" data-val="pause" style="'+trFilterStyle('pause',counts.pause,'#64748b')+'">⏸ En pause <strong>'+counts.pause+'</strong></button>'+
+        '<button onclick="trToggleFilter(null)" class="tr-filter-btn" data-val="all" style="'+trFilterStyle(null,counts.vide,'#bbb')+'">☰ Sans statut <strong>'+counts.vide+'</strong></button>'+
+        '<div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            '<span style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em">👤</span>'+
+            '<select id="tr-filter-resp" onchange="renderTracker()" '+
+              'style="font-size:12px;font-weight:700;border:1px solid #e8e8e8;border-radius:5px;padding:5px 10px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif">'+
+              '<option value="">Tous les employés</option>'+
+              ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'].map(function(r){return '<option value="'+r+'">'+r+'</option>';}).join('')+
+            '</select>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            '<span style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Mois actif :</span>'+
+            '<select onchange="trData.moisActif=parseInt(this.value);saveTR();renderTracker()" '+
+              'style="font-size:12px;font-weight:700;border:1px solid #e8e8e8;border-radius:5px;padding:5px 10px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif">'+
+              moisOpts+
+            '</select>'+
+          '</div>'+
         '</div>'+
       '</div>'+
 
@@ -1836,10 +1856,9 @@ function renderTracker(){
       '<div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(0,0,0,.1)">'+
         '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
           '<thead><tr style="background:#1e1e1e">'+
-            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">CLIENT</th>'+
+            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">CLIENT / RESPONSABLE</th>'+
             '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">PLATEFORME</th>'+
-            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">BUDGET/MOIS</th>'+
-            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">RESP.</th>'+
+            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">BUDGET</th>'+
             thMois+
             '<th style="border:none;width:30px"></th>'+
           '</tr></thead>'+
@@ -1858,15 +1877,101 @@ function renderTracker(){
 }
 
 
-function trSetStatut(ci, mois, val){
-  if(!trData.clients[ci].statuts) trData.clients[ci].statuts={};
-  trData.clients[ci].statuts[mois]=val;
+function trMigrateMultiPlat(){
+  trData.clients.forEach(function(c){
+    if(!c.plateformes){
+      c.plateformes = c.plateforme ? [c.plateforme] : ['Meta Ads'];
+    }
+    if(!c.statutsP){
+      c.statutsP = {};
+      var plat = c.plateformes[0];
+      c.statutsP[plat] = c.statuts || {};
+    }
+    if(!c.notesP){
+      c.notesP = {};
+      var plat = c.plateformes[0];
+      c.notesP[plat] = c.notes || {};
+    }
+    if(!c.respP){
+      c.respP = {};
+      c.plateformes.forEach(function(p){ c.respP[p] = c.responsable || ''; });
+    }
+  });
+}
+trMigrateMultiPlat();
+
+function trSetStatut(ci, mois, plat, val){
+  var c = trData.clients[ci];
+  if(!c.statutsP) c.statutsP={};
+  if(!c.statutsP[plat]) c.statutsP[plat]={};
+  c.statutsP[plat][mois]=val;
+  // Rétro-compatibilité: mettre à jour statuts[mois] avec le statut de la 1ère plateforme
+  if(plat===c.plateformes[0]){
+    if(!c.statuts) c.statuts={};
+    c.statuts[mois]=val;
+  }
   saveTR(); renderTracker();
 }
-function trSetNote(ci, mois, val){
-  if(!trData.clients[ci].notes) trData.clients[ci].notes={};
-  trData.clients[ci].notes[mois]=val;
+function trAddPlateforme(ci, plat){
+  var c = trData.clients[ci];
+  if(!c.plateformes) c.plateformes=[c.plateforme||'Meta Ads'];
+  if(c.plateformes.indexOf(plat)===-1){ c.plateformes.push(plat); }
+  if(!c.statutsP) c.statutsP={};
+  if(!c.statutsP[plat]) c.statutsP[plat]={};
+  if(!c.notesP) c.notesP={};
+  if(!c.notesP[plat]) c.notesP[plat]={};
+  if(!c.respP) c.respP={};
+  if(!c.respP[plat]) c.respP[plat] = c.responsable||'';
+  saveTR(); renderTracker();
+}
+function trRemovePlateforme(ci, plat){
+  var c = trData.clients[ci];
+  if(!c.plateformes||c.plateformes.length<=1) return;
+  c.plateformes=c.plateformes.filter(function(p){return p!==plat;});
+  saveTR(); renderTracker();
+}
+function trSetNote(ci, mois, plat, val){
+  var c2=trData.clients[ci];
+  if(!c2.notesP) c2.notesP={};
+  if(!c2.notesP[plat]) c2.notesP[plat]={};
+  c2.notesP[plat][mois]=val;
+  // Rétro-compat
+  if(!c2.notes) c2.notes={};
+  if(plat===(c2.plateformes||[c2.plateforme])[0]) c2.notes[mois]=val;
   saveTR();
+
+  // Synchroniser avec Notes clients si la note n'est pas vide
+  if(val && val.trim()){
+    var c = trData.clients[ci];
+    var proj = projects.find(function(p){ return p.client===c.nom && !p._archived; });
+    var today = new Date().toLocaleDateString('fr-CA');
+    var heure = new Date().toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+
+    // Vérifier si une note de suivi pour ce client + ce mois existe déjà
+    var existingIdx = notesData.notes.findIndex(function(n){
+      return n._fromTracker && n._trMois===mois && (n.client===c.nom || (proj && String(n.projId)===String(proj.id)));
+    });
+
+    var noteObj = {
+      id: existingIdx>-1 ? notesData.notes[existingIdx].id : Date.now(),
+      type: 'interne',
+      date: today,
+      heure: heure,
+      responsable: c.responsable || '',
+      client: c.nom,
+      projId: proj ? proj.id : null,
+      texte: '[Suivi projet — ' + mois.charAt(0).toUpperCase()+mois.slice(1) + '] ' + val.trim(),
+      _fromTracker: true,
+      _trMois: mois
+    };
+
+    if(existingIdx>-1){
+      notesData.notes[existingIdx] = noteObj;
+    } else {
+      notesData.notes.unshift(noteObj);
+    }
+    saveNotes();
+  }
 }
 function trAddClient(){
   trData.clients.push({nom:'Nouveau client',plateforme:'Meta Ads',budget:1000,responsable:'CDP',statuts:{},notes:{}});
@@ -1877,7 +1982,7 @@ function trDelClient(i){
 }
 
 // ── FEUILLES DE TEMPS ────────────────────────────────────
-var FT_EMPLOYES = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
+var FT_EMPLOYES = ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
 var FT_SERVICES = ['Planification stratégique','Search Ads','Social Ads','Geofencing','SEO','Contenu','Design','Développement','Rencontres & divers','Gestion de projet','Autre'];
 var FT_JOURS    = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
@@ -2231,10 +2336,24 @@ function renderBHDash(){
         '<div style="height:8px;background:#f0f0ee;border-radius:99px;overflow:hidden;margin-bottom:6px">'+
           '<div style="height:100%;border-radius:99px;background:'+col+';width:'+pct+'%;transition:width .4s"></div>'+
         '</div>'+
-        '<div style="display:flex;justify-content:space-between;font-size:10px;font-family:IBM Plex Mono,monospace">'+
+        '<div style="display:flex;justify-content:space-between;font-size:10px;font-family:IBM Plex Mono,monospace;margin-bottom:8px">'+
           '<span style="color:#888">Utilisé : <strong style="color:'+col+'">'+usedH.toFixed(1)+' h</strong></span>'+
           '<span style="color:#888">Restant : <strong style="color:'+(restH<0?'#dc2626':'#1a1a1a')+'">'+restH.toFixed(1)+' h</strong>'+(restH<0?' ⚠':'')+'</span>'+
           '<span style="color:#888"><strong>'+pct+'%</strong> utilisé</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            '<span style="font-size:9px;color:#aaa;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Début</span>'+
+            '<input type="date" value="'+(bh.dateDebut||'')+'" data-proj="'+pr.id+'" onchange="getBHClient(this.dataset.proj).dateDebut=this.value;saveBHC();" '+
+              'style="font-size:10px;border:1px solid #e8e8e8;border-radius:4px;padding:2px 6px;font-family:IBM Plex Mono,monospace;color:#555">'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            '<span style="font-size:9px;color:#aaa;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Fin prévue</span>'+
+            '<input type="date" value="'+(bh.dateFin||'')+'" data-proj="'+pr.id+'" onchange="getBHClient(this.dataset.proj).dateFin=this.value;saveBHC();" '+
+              'style="font-size:10px;border:1px solid #e8e8e8;border-radius:4px;padding:2px 6px;font-family:IBM Plex Mono,monospace;color:#555">'+
+          '</div>'+
+          (bh.dateFin && bh.heuresMois ? '<span style="font-size:10px;background:#f0f4ff;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-weight:700">'+
+            '~'+Math.round(restH/(bh.heuresMois||1))+' mois restants au rythme actuel</span>' : '')+
         '</div>'+
       '</div>'+
       // Services
@@ -2389,7 +2508,7 @@ function renderHebdo(){
 
   // ── Standups ──
   var standupCards = dat.standups.length ? dat.standups.map(function(s,i){
-    var empOpts = ['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Autre'].map(function(e){
+    var empOpts = ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Autre'].map(function(e){
       return '<option value="'+e+'"'+(e===s.nom?' selected':'')+'>'+e+'</option>';
     }).join('');
     return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;overflow:hidden">'+
@@ -2608,8 +2727,13 @@ function renderPM(){
 }
 
 function renderPMListe(p){
-  var plans = pmData.plans;
+  var pmSearchQ = (document.getElementById('pm-search')||{}).value||'';
+  var plans = pmData.plans.filter(function(pl){
+    return !pmSearchQ || pl.client.toLowerCase().indexOf(pmSearchQ.toLowerCase())>-1;
+  });
   var activeProjs = projects.filter(function(pr){return !pr._archived;});
+
+  var searchBar = '<div style="margin-bottom:16px"><input type="text" id="pm-search" placeholder="🔍 Filtrer par client..." oninput="renderPM()" value="'+pmSearchQ+'" style="width:280px;padding:7px 14px;border:1px solid #e8e8e8;border-radius:20px;font-size:13px;font-family:Barlow,sans-serif;outline:none;color:#555"></div>';
 
   var cards = plans.length ? plans.map(function(plan){
     var totalCamp = plan.campagnes.reduce(function(a,c){return a+pmSum(c.budgets||{});},0);
@@ -2646,7 +2770,8 @@ function renderPMListe(p){
       '<p class="hero-sub">Un plan média par client — campagnes, budgets, heures ADUX</p>'+
     '</div></div>'+
     '<div style="max-width:900px;margin:0 auto;padding:28px 40px 80px">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
+      searchBar+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
         '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">'+plans.length+' plan'+(plans.length!==1?'s':'')+' média</div>'+
         '<button onclick="pmNewPlan()" class="wiz-btn">+ Nouveau plan média</button>'+
       '</div>'+
@@ -3383,7 +3508,7 @@ function renderDevisEdit(p,d){
         '<textarea class="wiz-inp" rows="3" data-id="'+d.id+'" data-field="notes" onchange="dvSet(this.dataset.id*1,this.dataset.field,this.value)" placeholder="Conditions, délais, remarques…">'+d.notes+'</textarea></div>'+
       '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
         '<button data-id="'+d.id+'" onclick="dvPrint(this.dataset.id*1)" class="wiz-btn">🖨 Exporter en PDF</button>'+
-        '<button onclick="dvBack()" style="background:#f5f4f2;border:1px solid var(--border);color:#888;border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">← Retour à la liste</button>'+
+        ''+
         '<button data-id="'+d.id+'" onclick="dvDel(this.dataset.id*1)" style="background:transparent;border:1px solid rgba(212,43,43,.3);color:var(--red);border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;margin-left:auto">Supprimer</button>'+
       '</div>'+
     '</div>';
@@ -3404,7 +3529,7 @@ var NOTE_TYPES = {
   interne:  {label:'Interne',  bg:'#f1f5f9',color:'#64748b',emoji:'💬'},
   autre:    {label:'Autre',    bg:'#f5f0ff',color:'#7c3aed',emoji:'📌'},
 };
-var NOTE_RESPS=['Patrice','Francis','Molka','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Direction'];
+var NOTE_RESPS=['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric','Direction'];
 
 var notesState={filtre:'tous',filtreProj:'tous'};
 
@@ -3436,13 +3561,15 @@ function renderNotes(){
   var filtered=all.filter(function(n){
     var mp=fp==='tous'||(fp==='libre'&&!n.projId)||(String(n.projId)===String(fp));
     var mt=ft==='tous'||n.type===ft;
-    return mp&&mt;
+    var ms=!notesState.searchProj||(n.client||''). toLowerCase().indexOf(notesState.searchProj.toLowerCase())>-1;
+    return mp&&mt&&ms;
   });
   var thisMonth=new Date().toISOString().slice(0,7);
   var notesMois=all.filter(function(n){return n.date&&n.date.slice(0,7)===thisMonth;}).length;
 
   // Filtres projet
-  var pf='<button onclick="notesState.filtreProj=\'tous\';renderNotes()" class="note-filtre'+(fp==='tous'?' active':'')+'">Tous</button>'+
+  var pf='<div style="position:relative;margin-bottom:8px"><input type="text" placeholder="🔍 Rechercher un client..." value="'+(notesState.searchProj||'')+'" oninput="notesState.searchProj=this.value;renderNotes()" style="width:100%;padding:7px 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:12px;font-family:Barlow,sans-serif;outline:none"></div>'+
+    '<button onclick="notesState.filtreProj=\'tous\';notesState.searchProj=\'\';renderNotes()" class="note-filtre'+(fp==='tous'?' active':'')+'">Tous</button>'+
     '<button onclick="notesState.filtreProj=\'libre\';renderNotes()" class="note-filtre'+(fp==='libre'?' active':'')+'" >Sans projet</button>'+
     activeProjs.map(function(pr){
       return '<button onclick="notesState.filtreProj=\''+pr.id+'\';renderNotes()" class="note-filtre'+(String(fp)===String(pr.id)?' active':'')+'">'+pr.client+'</button>';
@@ -3574,12 +3701,14 @@ function buildProjetDetail(){
   '</div>';
 
   // ── Notes récentes ──
-  var projNotes = notesData.notes.filter(function(n){return String(n.projId)===String(proj.id)||n.client===proj.client;}).slice(0,5);
+  var projNotes = notesData.notes.filter(function(n){return String(n.projId)===String(proj.id)||n.client===proj.client;}).sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);}).slice(0,8);
   var notesSection = projNotes.length?projNotes.map(function(n){
     var nt=NOTE_TYPES[n.type]||NOTE_TYPES.autre;
-    return '<div style="padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.05)">'+
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+    var trackerBadge = n._fromTracker ? '<span style="background:#f0f4ff;color:#1d4ed8;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">📋 Suivi projet</span>' : '';
+    return '<div style="padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.05)'+(n._fromTracker?';background:#fafbff':'')+'">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">'+
         '<span style="background:'+nt.bg+';color:'+nt.color+';font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">'+nt.emoji+' '+nt.label+'</span>'+
+        trackerBadge+
         '<span style="font-size:10px;color:#aaa;font-family:IBM Plex Mono,monospace">'+n.date+' '+n.heure+'</span>'+
         '<span style="font-size:10px;color:#1d4ed8;font-weight:700">'+n.responsable+'</span>'+
       '</div>'+
@@ -3943,22 +4072,22 @@ function sbLoad(){
     if(d.bhData)     Object.assign(bhData,   d.bhData);
     if(d.bhClients)  Object.assign(bhClients,d.bhClients);
     if(d.trData){
-      // Garder la liste la plus longue (code vs Supabase)
       var sbClients = (d.trData.clients||[]).length;
       var codeClients = trData.clients.length;
       if(sbClients >= codeClients){
         trData = d.trData;
       } else {
-        // Supabase a moins de clients — garder les statuts mais pas la liste
         if(d.trData.clients && d.trData.clients.length > 0){
           d.trData.clients.forEach(function(sc){
             var found = trData.clients.find(function(c){return c.nom===sc.nom||c.id===sc.id;});
-            if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.plateforme=sc.plateforme||found.plateforme; }
+            if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.plateforme=sc.plateforme||found.plateforme; found.plateformes=sc.plateformes||found.plateformes; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; }
           });
         }
         trData.annee = d.trData.annee || trData.annee;
         trData.moisActif = d.trData.moisActif !== undefined ? d.trData.moisActif : trData.moisActif;
       }
+      // Migration multi-plateformes
+      trMigrateMultiPlat();
     }
     if(d.pmData){
       // Migration: si l'ancien format (avec campagnes directement) → convertir
@@ -4208,6 +4337,57 @@ function syncClientsToProjects(){
     saveTR();
     savePM();
   }
+}
+
+
+function ouvrirModalProjet(){
+  var m=document.getElementById('modal-nouveau-projet');
+  if(m){ m.style.display='flex'; }
+}
+function fermerModalProjet(){
+  var m=document.getElementById('modal-nouveau-projet');
+  if(m){ m.style.display='none'; }
+}
+// Fermer modal en cliquant outside
+document.addEventListener('click',function(e){
+  var m=document.getElementById('modal-nouveau-projet');
+  if(m && e.target===m) fermerModalProjet();
+});
+
+
+var trActiveFilters = [];
+function trToggleFilter(val){
+  if(val===null){ trActiveFilters=[]; renderTracker(); return; }
+  var idx=trActiveFilters.indexOf(val);
+  if(idx>-1) trActiveFilters.splice(idx,1);
+  else trActiveFilters.push(val);
+  renderTracker();
+}
+function trFilterStyle(val, count, color){
+  var active = val && trActiveFilters.indexOf(val)>-1;
+  var base = 'font-family:Barlow,sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;border:1px solid;';
+  if(active) return base+'background:'+color+';color:#fff;border-color:'+color+';';
+  return base+'background:#fff;color:#555;border-color:#e8e8e8;';
+}
+
+
+function renderHomeWithDashboard(){
+  renderProjects();
+  var statsEl = document.getElementById('home-dashboard-stats');
+  if(!statsEl) return;
+  var alerts = getAlerts();
+  var crits = alerts.filter(function(a){return a.level==='crit';});
+  var moisActif = TR_MOIS_KEYS[new Date().getMonth()];
+  var clientsOk   = (trData.clients||[]).filter(function(c){return (c.statuts||{})[moisActif]==='ok';}).length;
+  var clientsBloc = (trData.clients||[]).filter(function(c){return (c.statuts||{})[moisActif]==='bloc';}).length;
+  statsEl.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:16px">'+
+      '<div class="kpi red"><div class="kl">Projets actifs</div><div class="kv">'+projects.filter(function(p){return !p._archived;}).length+'</div></div>'+
+      '<div class="kpi gr"><div class="kl">Optimisés</div><div class="kv">'+clientsOk+'</div><div class="ks">ce mois</div></div>'+
+      '<div class="kpi '+(clientsBloc?'red':'gy')+'"><div class="kl">Bloquants</div><div class="kv">'+clientsBloc+'</div><div class="ks">ce mois</div></div>'+
+      '<div class="kpi '+(crits.length?'red':'bl')+'"><div class="kl">Alertes BH</div><div class="kv">'+crits.length+'</div></div>'+
+    '</div>'+
+    (alerts.length?'<div style="background:#fff5f5;border:1px solid rgba(212,43,43,.2);border-radius:8px;padding:10px 16px;margin-bottom:8px;font-size:12px"><span style="color:#d42b2b;font-weight:700">🚨 '+alerts.length+' alerte(s) — </span>'+alerts.slice(0,2).map(function(a){return a.msg.replace(/<[^>]+>/g,'');}).join(' · ')+'</div>':'');
 }
 
 </script>
