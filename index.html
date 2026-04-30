@@ -572,15 +572,16 @@ tfoot td.r{text-align:right}
     <button class="nav-btn" onclick="SP('feuilles',this)"><span class="nav-icon">⏱</span><span>Feuilles de temps</span></button>
     <button class="nav-btn" onclick="SP('bhdash',this)"><span class="nav-icon">💰</span><span>Banques d'heures</span></button>
     <button class="nav-btn" onclick="SP('tracker',this)"><span class="nav-icon">📊</span><span>Suivi projet</span></button>
-    <button class="nav-btn" onclick="SP('planmedia',this)"><span class="nav-icon">📅</span><span>Plan média</span></button>
   </div>
   <div class="nav-section">
     <div class="nav-label">Rapports</div>
     <button class="nav-btn" onclick="SP('notes',this)"><span class="nav-icon">📝</span><span>Notes clients</span></button>
-    <button class="nav-btn" onclick="SP('devis',this)"><span class="nav-icon">📋</span><span>Devis</span></button>
     <button class="nav-btn" onclick="SP('historique',this)"><span class="nav-icon">📜</span><span>Historique</span></button>
   </div>
-  <div class="nav-footer">ADUX Stratégies · v1.1</div>
+  <div style="padding:8px 10px;border-top:1px solid rgba(255,255,255,.07)">
+    <button class="nav-btn" onclick="SP('aide',this)" style="font-size:11px;color:rgba(255,255,255,.5)"><span class="nav-icon" style="font-size:14px">❓</span><span>Aide / Docs</span></button>
+  </div>
+  <div class="nav-footer">ADUX Stratégies · v1.2</div>
   <div style="padding:8px 10px;border-top:1px solid rgba(255,255,255,.07)">
     <button class="nav-btn" onclick="SP('settings',this)" style="font-size:11px;color:rgba(255,255,255,.35)"><span class="nav-icon" style="font-size:13px">⚙️</span><span>Paramètres</span></button>
   </div>
@@ -669,6 +670,7 @@ tfoot td.r{text-align:right}
 <div class="panel" id="p-projet"></div>
 <div class="panel" id="p-notes"></div>
 <div class="panel" id="p-devis"></div>
+<div class="panel" id="p-aide"></div>
 <div class="panel" id="p-settings"></div>
 <div class="panel" id="p-search"></div>
 <div class="panel" id="p-notif"></div>
@@ -734,6 +736,7 @@ function SP(id, btn) {
   if (id==='notes')                          { buildNotes(); }
   if (id==='devis')                          { buildDevis(); }
   if (id==='settings')                        { buildSettings(); }
+  if (id==='aide')                            { buildAide(); }
   if (id==='search')                         { renderSearch(document.getElementById('sidebar-search')?document.getElementById('sidebar-search').value:''); }
   if (id==='notif')                          { buildNotif(); }
 }
@@ -1599,44 +1602,44 @@ var trData = {
   annee: new Date().getFullYear(),
   moisActif: new Date().getMonth(),
   clients: [
-  {id:'ID-0001',num:'885-440-5197',statut:'Actif',agence:'Compétence Québec',nom:'Compétences Québec',responsable:'Patrice',banqueH:'200',heuresMois:16.5,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0006',num:'226-539-9178',statut:'Actif',agence:'ADUX',nom:'Aura SXM',responsable:'Patrice',banqueH:'550 (forfait)',heuresMois:3.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0010',num:'401-596-0162',statut:'Pause',agence:'ADUX',nom:'Boulet Desrosiers Boivin Avocats',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0012',num:'815-174-0282',statut:'Actif',agence:'ADUX',nom:'CBR Laser',responsable:'Patrice',banqueH:'555 (forfait)',heuresMois:3.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0014',num:'760-527-2325',statut:'Pause',agence:'Publiko',nom:'CISSS-CA - Comité des usagers',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0015',num:'777-111-9037',statut:'Pause',agence:'Publiko',nom:'CISSS-CA - Famille d\'accueil',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0016',num:'685-197-1686',statut:'Actif',agence:'Publiko',nom:'CISSS-CA Balados',responsable:'Patrice',banqueH:'125 (forfait)',heuresMois:1.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0019',num:'457-463-3177',statut:'Pause',agence:'Publiko',nom:'Clinique Dentaire Paule Laliberté',responsable:'Patrice',banqueH:'470 (forfait)',heuresMois:2.75,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0021',num:'583-853-9823',statut:'Pause',agence:'ADUX',nom:'Clôture Daviault',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0022',num:'365-139-5276',statut:'Pause',agence:'Minimal',nom:'Collège Jésus-Marie de Bellechasse',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0023',num:'819-633-1713',statut:'Pause',agence:'Publiko',nom:'Corporation du cimetière Mont-Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0026',num:'831-874-0164',statut:'Actif',agence:'ADUX',nom:'Distillerie Arsenal',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0027',num:'572-581-8184',statut:'Arrêt',agence:'ADUX',nom:'Eau Pure',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0029',num:'210-986-2947',statut:'Pause',agence:'Publiko',nom:'EMJM - École de musique Jésus-Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0034',num:'681-703-9807',statut:'Actif',agence:'ADUX',nom:'Giant Valleyfield',responsable:'Patrice',banqueH:'Financement 50h',heuresMois:4.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0035',num:'343-504-4282',statut:'Actif',agence:'ADUX',nom:'Gouttière Moisan',responsable:'Patrice',banqueH:'Carte 175$/h',heuresMois:3.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0038',num:'288-200-6341',statut:'Actif',agence:'ADUX',nom:'Habitations JL',responsable:'Molka',banqueH:'550 (forfait)',heuresMois:3.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0040',num:'563-216-6294',statut:'Actif',agence:'Compétence Québec',nom:'InforouteFPT - AdGrants',responsable:'Patrice',banqueH:'200',heuresMois:16.5,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0042',num:'528-329-7139',statut:'Pause',agence:'Publiko',nom:'InspecVision',responsable:'Patrice',banqueH:'595 (forfait)',heuresMois:4.5,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0043',num:'269-282-7448',statut:'Actif',agence:'ADUX',nom:'Jacqueline Rioux Maquillage',responsable:'Patrice',banqueH:'190 (forfait)',heuresMois:1.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0044',num:'949-101-6364',statut:'Pause',agence:'Virus 1334',nom:'John Abbott Continuing Education',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0047',num:'134-517-5345',statut:'Actif',agence:'ADUX',nom:'Lemire Lemire CPA',responsable:'Patrice',banqueH:'191 (forfait)',heuresMois:1.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0048',num:'493-925-0611',statut:'Actif',agence:'Maison 1608',nom:'Les Halles Sainte-Foy',responsable:'Molka',banqueH:'470 (forfait)',heuresMois:2.5,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0050',num:'279-035-7993',statut:'Actif',agence:'ADUX',nom:'Manoir Lac William',responsable:'Francis',banqueH:'535 (forfait)',heuresMois:3.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0056',num:'617-388-7517',statut:'Arrêt',agence:'Minimal',nom:'SSpace',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0057',num:'677-620-7521',statut:'Pause',agence:'Minimal',nom:'MSS - École Mont-Saint-Sacrement',responsable:'Patrice',banqueH:'375 (forfait)',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0060',num:'292-959-3098',statut:'Arrêt',agence:'ADUX',nom:'Nox Gaming',responsable:'Patrice',banqueH:'650 (forfait)',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0064',num:'743-240-2737',statut:'Actif',agence:'ADUX',nom:'Reflec',responsable:'Patrice',banqueH:'22h prépayé',heuresMois:3.5,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0065',num:'933-855-8443',statut:'Pause',agence:'ADUX',nom:'Sani Dépôt',responsable:'Patrice',banqueH:'Heures épuisées',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0066',num:'270-723-2839',statut:'Actif',agence:'Maison 1608',nom:'Solisco',responsable:'Patrice',banqueH:'300 (forfait)',heuresMois:1.75,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0068',num:'471-613-7607',statut:'Actif',agence:'ADUX',nom:'Toitures Dérek Fortier',responsable:'Patrice',banqueH:'75',heuresMois:6.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0072',num:'684-156-1199',statut:'Actif',agence:'Minimal',nom:'ArcelorMittal',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0093',num:'',statut:'Actif',agence:'ADUX',nom:'Collège Ville Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0094',num:'',statut:'Actif',agence:'Maison 1608',nom:'Arboris',responsable:'Patrice',banqueH:'985',heuresMois:4.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0095',num:'',statut:'Actif',agence:'Publiko',nom:'Rodrigue Métal',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0097',num:'',statut:'Pause',agence:'Minimal',nom:'Parti Québécois',responsable:'Patrice',banqueH:'',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0100',num:'',statut:'Actif',agence:'Publiko',nom:'CAT',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}},
-  {id:'ID-0101',num:'',statut:'Actif',agence:'1608',nom:'1608',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,plateforme:'Meta Ads',budget:0,statuts:{},notes:{}}
+  {id:'ID-0001',num:'885-440-5197',statut:'Actif',agence:'Compétence Québec',nom:'Compétences Québec',responsable:'Patrice',banqueH:'200',heuresMois:16.5,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0006',num:'226-539-9178',statut:'Actif',agence:'ADUX',nom:'Aura SXM',responsable:'Patrice',banqueH:'550 (forfait)',heuresMois:3.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0010',num:'401-596-0162',statut:'Pause',agence:'ADUX',nom:'Boulet Desrosiers Boivin Avocats',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0012',num:'815-174-0282',statut:'Actif',agence:'ADUX',nom:'CBR Laser',responsable:'Patrice',banqueH:'555 (forfait)',heuresMois:3.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0014',num:'760-527-2325',statut:'Pause',agence:'Publiko',nom:'CISSS-CA - Comité des usagers',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0015',num:'777-111-9037',statut:'Pause',agence:'Publiko',nom:'CISSS-CA - Famille d\'accueil',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0016',num:'685-197-1686',statut:'Actif',agence:'Publiko',nom:'CISSS-CA Balados',responsable:'Patrice',banqueH:'125 (forfait)',heuresMois:1.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0019',num:'457-463-3177',statut:'Pause',agence:'Publiko',nom:'Clinique Dentaire Paule Laliberté',responsable:'Patrice',banqueH:'470 (forfait)',heuresMois:2.75,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0021',num:'583-853-9823',statut:'Pause',agence:'ADUX',nom:'Clôture Daviault',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0022',num:'365-139-5276',statut:'Pause',agence:'Minimal',nom:'Collège Jésus-Marie de Bellechasse',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0023',num:'819-633-1713',statut:'Pause',agence:'Publiko',nom:'Corporation du cimetière Mont-Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0026',num:'831-874-0164',statut:'Actif',agence:'ADUX',nom:'Distillerie Arsenal',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0027',num:'572-581-8184',statut:'Arrêt',agence:'ADUX',nom:'Eau Pure',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0029',num:'210-986-2947',statut:'Pause',agence:'Publiko',nom:'EMJM - École de musique Jésus-Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0034',num:'681-703-9807',statut:'Actif',agence:'ADUX',nom:'Giant Valleyfield',responsable:'Patrice',banqueH:'Financement 50h',heuresMois:4.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0035',num:'343-504-4282',statut:'Actif',agence:'ADUX',nom:'Gouttière Moisan',responsable:'Patrice',banqueH:'Carte 175$/h',heuresMois:3.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0038',num:'288-200-6341',statut:'Actif',agence:'ADUX',nom:'Habitations JL',responsable:'Molka',banqueH:'550 (forfait)',heuresMois:3.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0040',num:'563-216-6294',statut:'Actif',agence:'Compétence Québec',nom:'InforouteFPT - AdGrants',responsable:'Patrice',banqueH:'200',heuresMois:16.5,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0042',num:'528-329-7139',statut:'Pause',agence:'Publiko',nom:'InspecVision',responsable:'Patrice',banqueH:'595 (forfait)',heuresMois:4.5,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0043',num:'269-282-7448',statut:'Actif',agence:'ADUX',nom:'Jacqueline Rioux Maquillage',responsable:'Patrice',banqueH:'190 (forfait)',heuresMois:1.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0044',num:'949-101-6364',statut:'Pause',agence:'Virus 1334',nom:'John Abbott Continuing Education',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0047',num:'134-517-5345',statut:'Actif',agence:'ADUX',nom:'Lemire Lemire CPA',responsable:'Patrice',banqueH:'191 (forfait)',heuresMois:1.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0048',num:'493-925-0611',statut:'Actif',agence:'Maison 1608',nom:'Les Halles Sainte-Foy',responsable:'Molka',banqueH:'470 (forfait)',heuresMois:2.5,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0050',num:'279-035-7993',statut:'Actif',agence:'ADUX',nom:'Manoir Lac William',responsable:'Francis',banqueH:'535 (forfait)',heuresMois:3.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0056',num:'617-388-7517',statut:'Arrêt',agence:'Minimal',nom:'SSpace',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0057',num:'677-620-7521',statut:'Pause',agence:'Minimal',nom:'MSS - École Mont-Saint-Sacrement',responsable:'Patrice',banqueH:'375 (forfait)',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0060',num:'292-959-3098',statut:'Arrêt',agence:'ADUX',nom:'Nox Gaming',responsable:'Patrice',banqueH:'650 (forfait)',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0064',num:'743-240-2737',statut:'Actif',agence:'ADUX',nom:'Reflec',responsable:'Patrice',banqueH:'22h prépayé',heuresMois:3.5,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0065',num:'933-855-8443',statut:'Pause',agence:'ADUX',nom:'Sani Dépôt',responsable:'Patrice',banqueH:'Heures épuisées',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0066',num:'270-723-2839',statut:'Actif',agence:'Maison 1608',nom:'Solisco',responsable:'Patrice',banqueH:'300 (forfait)',heuresMois:1.75,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0068',num:'471-613-7607',statut:'Actif',agence:'ADUX',nom:'Toitures Dérek Fortier',responsable:'Patrice',banqueH:'75',heuresMois:6.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0072',num:'684-156-1199',statut:'Actif',agence:'Minimal',nom:'ArcelorMittal',responsable:'Patrice',banqueH:'395 (forfait)',heuresMois:2.25,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0093',num:'',statut:'Actif',agence:'ADUX',nom:'Collège Ville Marie',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0094',num:'',statut:'Actif',agence:'Maison 1608',nom:'Arboris',responsable:'Patrice',banqueH:'985',heuresMois:4.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0095',num:'',statut:'Actif',agence:'Publiko',nom:'Rodrigue Métal',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0097',num:'',statut:'Pause',agence:'Minimal',nom:'Parti Québécois',responsable:'Patrice',banqueH:'',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0100',num:'',statut:'Actif',agence:'Publiko',nom:'CAT',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}},
+  {id:'ID-0101',num:'',statut:'Actif',agence:'1608',nom:'1608',responsable:'Patrice',banqueH:'À venir',heuresMois:0.0,service:'Meta Ads',budget:0,statuts:{},notes:{}}
   ]
 };
 try { var _trd=localStorage.getItem('adux_tr'); if(_trd) trData=JSON.parse(_trd); } catch(e){}
@@ -1691,7 +1694,7 @@ function renderTracker(){
   }).map(function(c,ci){
 
     var platColors = {'Meta Ads':'#1877F2','Google Ads':'#34A853','LinkedIn Ads':'#0a66c2','YouTube Ads':'#c00','TikTok Ads':'#69C9D0','Email':'#7c3aed','Google SEO':'#f59e0b','Autre':'#888'};
-    var pc = platColors[c.plateforme]||'#888';
+    var pc = platColors[c.service]||'#888';
 
     // Mini-compteurs annuels
     var nc={ok:0,bloc:0,non:0,pause:0,cours:0};
@@ -1704,17 +1707,17 @@ function renderTracker(){
       (nc.pause ? '<span style="font-size:8px;background:#f1f5f9;color:#64748b;border-radius:3px;padding:1px 5px;font-weight:700">PAUSE '+nc.pause+'</span>' : '');
 
     // Plateforme options
-    var platOpts = TR_PLATF.map(function(pl){return '<option value="'+pl+'"'+(pl===c.plateforme?' selected':'')+'>'+pl+'</option>';}).join('');
+    var platOpts = TR_PLATF.map(function(pl){return '<option value="'+pl+'"'+(pl===c.service?' selected':'')+'>'+pl+'</option>';}).join('');
 
     // Responsable options
     var respOpts = TR_RESPS.map(function(r){return '<option value="'+r+'"'+(r===c.responsable?' selected':'')+'>'+r+'</option>';}).join('');
 
-    // Cellules statut par mois — MULTI-PLATEFORME
-    var plateformes = c.plateformes && c.plateformes.length ? c.plateformes : [c.plateforme||'Meta Ads'];
+    // Cellules statut par mois — MULTI-SERVICE
+    var services = c.services && c.services.length ? c.services : [c.service||'Meta Ads'];
     var platColors = {'Meta Ads':'#1877F2','Google Ads':'#34A853','LinkedIn Ads':'#0a66c2','YouTube Ads':'#c00','TikTok Ads':'#69C9D0','Email':'#7c3aed','Google SEO':'#f59e0b','SEO':'#f59e0b','Contenu':'#10b981','Site web':'#6366f1','Banque d\'heures':'#d42b2b','Autre':'#888'};
 
-    // Générer une ligne par plateforme
-    var platRows = plateformes.map(function(plat, pi){
+    // Générer une ligne par service
+    var platRows = services.map(function(plat, pi){
       var platStatuts = (c.statutsP&&c.statutsP[plat]) ? c.statutsP[plat] : (pi===0?(c.statuts||{}):{});
       var platNotes   = (c.notesP&&c.notesP[plat])     ? c.notesP[plat]   : (pi===0?(c.notes||{}):{});
       var pc2 = platColors[plat]||'#888';
@@ -1747,15 +1750,15 @@ function renderTracker(){
       var isFirst = pi===0;
       var platSelect = '<select onchange="trAddPlateforme('+ci+',this.value);this.value=\'\'" '+
         'style="font-size:9px;border:1px dashed #ccc;border-radius:4px;padding:2px 4px;background:#fff;cursor:pointer;font-family:Barlow,sans-serif;color:#888;margin-top:4px">'+
-        '<option value="">+ Plateforme</option>'+
-        TR_PLATF.filter(function(p){return plateformes.indexOf(p)===-1;}).map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('')+
+        '<option value="">+ Service</option>'+
+        TR_PLATF.filter(function(p){return services.indexOf(p)===-1;}).map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('')+
       '</select>';
-      var removeBtn = plateformes.length>1 ?
+      var removeBtn = services.length>1 ?
         '<button onclick="trRemovePlateforme('+ci+',\''+plat+'\');event.stopPropagation()" style="background:transparent;border:none;color:#ddd;cursor:pointer;font-size:10px;padding:0 2px" title="Retirer">✕</button>' : '';
 
-      return '<tr style="border-bottom:'+(pi===plateformes.length-1?'2px solid rgba(0,0,0,.1)':'1px dashed rgba(0,0,0,.04)')+'">'+
+      return '<tr style="border-bottom:'+(pi===services.length-1?'2px solid rgba(0,0,0,.1)':'1px dashed rgba(0,0,0,.04)')+'">'+
         (isFirst ?
-          '<td rowspan="'+plateformes.length+'" style="padding:8px 14px;border:1px solid rgba(0,0,0,.05);min-width:200px;vertical-align:top">'+
+          '<td rowspan="'+services.length+'" style="padding:8px 14px;border:1px solid rgba(0,0,0,.05);min-width:200px;vertical-align:top">'+
             '<div style="font-size:10px;font-family:IBM Plex Mono,monospace;color:#bbb;margin-bottom:2px">'+c.id+' · '+c.num+'</div>'+
             '<div style="font-size:13px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;color:#1a1a1a" contenteditable onblur="trData.clients['+ci+'].nom=this.textContent;saveTR()">'+c.nom+'</div>'+
             '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">'+
@@ -1783,16 +1786,16 @@ function renderTracker(){
             }).join('')+
           '</select>'+
         '</td>'+
-        '<td style="padding:5px 8px;border:1px solid rgba(0,0,0,.05);min-width:80px">'+
-          (isFirst?
-            '<div style="display:flex;align-items:center;gap:3px">'+
-              '<input type="number" min="0" value="'+c.budget+'" onchange="trData.clients['+ci+'].budget=parseFloat(this.value)||0;saveTR()" '+
-                'style="width:60px;font-size:11px;font-weight:700;font-family:IBM Plex Mono,monospace;border:1px solid #e8e8e8;border-radius:4px;padding:3px 5px;background:#f5f4f2;text-align:right">'+
-              '<span style="font-size:9px;color:#888">$</span>'+
-            '</div>' : '')+
+        '<td style="padding:5px 8px;border:1px solid rgba(0,0,0,.05);min-width:90px">'+
+          '<div style="display:flex;align-items:center;gap:3px">'+
+            '<input type="number" min="0" value="'+((c.budgetP&&c.budgetP[plat])||0)+'" '+
+              'onchange="(function(v){var cl=trData.clients['+ci+'];if(!cl.budgetP)cl.budgetP={};cl.budgetP[\''+plat+'\'] =parseFloat(v)||0;if(cl.services&&cl.services[0]===\''+plat+'\')cl.budget=parseFloat(v)||0;saveTR();})(this.value)" '+
+              'style="width:64px;font-size:11px;font-weight:700;font-family:IBM Plex Mono,monospace;border:1px solid #e8e8e8;border-radius:4px;padding:3px 5px;background:#f5f4f2;text-align:right">'+
+            '<span style="font-size:9px;color:#888">$</span>'+
+          '</div>'+
         '</td>'+
         moisCells2+
-        (isFirst?'<td rowspan="'+plateformes.length+'" style="padding:4px;border:none;text-align:center;vertical-align:top"><button onclick="trDelClient('+ci+')" style="background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px">✕</button></td>':'<td style="border:none"></td>')+
+        (isFirst?'<td rowspan="'+services.length+'" style="padding:4px;border:none;text-align:center;vertical-align:top"><button onclick="trDelClient('+ci+')" style="background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px">✕</button></td>':'<td style="border:none"></td>')+
       '</tr>';
     }).join('');
 
@@ -1857,8 +1860,8 @@ function renderTracker(){
         '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
           '<thead><tr style="background:#1e1e1e">'+
             '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">CLIENT / RESPONSABLE</th>'+
-            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">PLATEFORME</th>'+
-            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">BUDGET</th>'+
+            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">SERVICE</th>'+
+            '<th style="padding:10px 14px;text-align:left;font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.07)">BUDGET/MOIS</th>'+
             thMois+
             '<th style="border:none;width:30px"></th>'+
           '</tr></thead>'+
@@ -1879,22 +1882,26 @@ function renderTracker(){
 
 function trMigrateMultiPlat(){
   trData.clients.forEach(function(c){
-    if(!c.plateformes){
-      c.plateformes = c.plateforme ? [c.plateforme] : ['Meta Ads'];
+    if(!c.services){
+      c.services = c.service ? [c.service] : ['Meta Ads'];
     }
     if(!c.statutsP){
       c.statutsP = {};
-      var plat = c.plateformes[0];
+      var plat = c.services[0];
       c.statutsP[plat] = c.statuts || {};
     }
     if(!c.notesP){
       c.notesP = {};
-      var plat = c.plateformes[0];
+      var plat = c.services[0];
       c.notesP[plat] = c.notes || {};
     }
     if(!c.respP){
       c.respP = {};
-      c.plateformes.forEach(function(p){ c.respP[p] = c.responsable || ''; });
+      c.services.forEach(function(p){ c.respP[p] = c.responsable || ''; });
+    }
+    if(!c.budgetP){
+      c.budgetP = {};
+      c.services.forEach(function(p,i){ c.budgetP[p] = i===0 ? (c.budget||0) : 0; });
     }
   });
 }
@@ -1905,8 +1912,8 @@ function trSetStatut(ci, mois, plat, val){
   if(!c.statutsP) c.statutsP={};
   if(!c.statutsP[plat]) c.statutsP[plat]={};
   c.statutsP[plat][mois]=val;
-  // Rétro-compatibilité: mettre à jour statuts[mois] avec le statut de la 1ère plateforme
-  if(plat===c.plateformes[0]){
+  // Rétro-compatibilité: mettre à jour statuts[mois] avec le statut de la 1ère service
+  if(plat===c.services[0]){
     if(!c.statuts) c.statuts={};
     c.statuts[mois]=val;
   }
@@ -1914,20 +1921,22 @@ function trSetStatut(ci, mois, plat, val){
 }
 function trAddPlateforme(ci, plat){
   var c = trData.clients[ci];
-  if(!c.plateformes) c.plateformes=[c.plateforme||'Meta Ads'];
-  if(c.plateformes.indexOf(plat)===-1){ c.plateformes.push(plat); }
+  if(!c.services) c.services=[c.service||'Meta Ads'];
+  if(c.services.indexOf(plat)===-1){ c.services.push(plat); }
   if(!c.statutsP) c.statutsP={};
   if(!c.statutsP[plat]) c.statutsP[plat]={};
   if(!c.notesP) c.notesP={};
   if(!c.notesP[plat]) c.notesP[plat]={};
   if(!c.respP) c.respP={};
   if(!c.respP[plat]) c.respP[plat] = c.responsable||'';
+  if(!c.budgetP) c.budgetP={};
+  if(!c.budgetP[plat]) c.budgetP[plat] = 0;
   saveTR(); renderTracker();
 }
 function trRemovePlateforme(ci, plat){
   var c = trData.clients[ci];
-  if(!c.plateformes||c.plateformes.length<=1) return;
-  c.plateformes=c.plateformes.filter(function(p){return p!==plat;});
+  if(!c.services||c.services.length<=1) return;
+  c.services=c.services.filter(function(p){return p!==plat;});
   saveTR(); renderTracker();
 }
 function trSetNote(ci, mois, plat, val){
@@ -1937,7 +1946,7 @@ function trSetNote(ci, mois, plat, val){
   c2.notesP[plat][mois]=val;
   // Rétro-compat
   if(!c2.notes) c2.notes={};
-  if(plat===(c2.plateformes||[c2.plateforme])[0]) c2.notes[mois]=val;
+  if(plat===(c2.services||[c2.service])[0]) c2.notes[mois]=val;
   saveTR();
 
   // Synchroniser avec Notes clients si la note n'est pas vide
@@ -1974,7 +1983,7 @@ function trSetNote(ci, mois, plat, val){
   }
 }
 function trAddClient(){
-  trData.clients.push({nom:'Nouveau client',plateforme:'Meta Ads',budget:1000,responsable:'CDP',statuts:{},notes:{}});
+  trData.clients.push({nom:'Nouveau client',service:'Meta Ads',budget:1000,responsable:'CDP',statuts:{},notes:{}});
   saveTR(); renderTracker();
 }
 function trDelClient(i){
@@ -2352,8 +2361,36 @@ function renderBHDash(){
             '<input type="date" value="'+(bh.dateFin||'')+'" data-proj="'+pr.id+'" onchange="getBHClient(this.dataset.proj).dateFin=this.value;saveBHC();" '+
               'style="font-size:10px;border:1px solid #e8e8e8;border-radius:4px;padding:2px 6px;font-family:IBM Plex Mono,monospace;color:#555">'+
           '</div>'+
-          (bh.dateFin && bh.heuresMois ? '<span style="font-size:10px;background:#f0f4ff;color:#1d4ed8;border-radius:4px;padding:2px 8px;font-weight:700">'+
-            '~'+Math.round(restH/(bh.heuresMois||1))+' mois restants au rythme actuel</span>' : '')+
+          (function(){
+            var today = new Date();
+            var chips = '';
+
+            // Calcul basé sur date de fin
+            if(bh.dateFin){
+              var fin = new Date(bh.dateFin);
+              var diffMs = fin - today;
+              var diffJours = Math.ceil(diffMs / (1000*60*60*24));
+              var diffSem  = Math.round(diffJours / 7);
+              var diffMois = Math.round(diffJours / 30.5);
+              var couleur  = diffJours < 0 ? '#dc2626' : diffJours < 30 ? '#b45309' : '#1d4ed8';
+              var bgcoul   = diffJours < 0 ? '#fff5f5' : diffJours < 30 ? '#fffbeb' : '#f0f4ff';
+              var label    = diffJours < 0 ? Math.abs(diffJours)+' jours dépassé ⚠' :
+                             diffJours < 14 ? diffJours+' jours restants' :
+                             diffJours < 60 ? diffSem+' semaines restantes' :
+                             diffMois+' mois restants';
+              chips += '<span style="font-size:10px;background:'+bgcoul+';color:'+couleur+';border-radius:4px;padding:2px 8px;font-weight:700;border:1px solid '+couleur+'44">📅 '+label+'</span> ';
+            }
+
+            // Calcul basé sur rythme d'utilisation
+            if(bh.heuresMois && restH > 0){
+              var moisRythme = Math.round(restH / (bh.heuresMois||1));
+              var semRythme  = Math.round(restH / (bh.heuresMois||1) * 4.3);
+              var labelRythme = semRythme < 8 ? semRythme+' sem. au rythme actuel' : moisRythme+' mois au rythme actuel';
+              chips += '<span style="font-size:10px;background:#f0fdf4;color:#16a34a;border-radius:4px;padding:2px 8px;font-weight:700;border:1px solid #bbf7d0">⏱ ~'+labelRythme+'</span>';
+            }
+
+            return chips ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+chips+'</div>' : '';
+          })()+
         '</div>'+
       '</div>'+
       // Services
@@ -2805,9 +2842,9 @@ function renderPMPlan(p, plan){
 
   var campRows = plan.campagnes.map(function(c,ci){
     var fColor = PM_FUNNEL_COLORS[c.funnel]||'#888';
-    var pColor = PM_PLAT_COLORS[c.plateforme]||'#888';
+    var pColor = PM_PLAT_COLORS[c.service]||'#888';
     var funOpts = PM_FUNNELS.map(function(f){return '<option value="'+f+'"'+(f===c.funnel?' selected':'')+'>'+f+'</option>';}).join('');
-    var platOpts = PM_PLATES.map(function(f){return '<option value="'+f+'"'+(f===c.plateforme?' selected':'')+'>'+f+'</option>';}).join('');
+    var platOpts = PM_PLATES.map(function(f){return '<option value="'+f+'"'+(f===c.service?' selected':'')+'>'+f+'</option>';}).join('');
 
     var moisCells = PM_MOIS_KEYS.map(function(k){
       var plan2=c.budgets||{}, reel2=c.reels||{};
@@ -2846,7 +2883,7 @@ function renderPMPlan(p, plan){
           'onblur="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].audience=v;savePM();})(this.textContent)">'+c.audience+'</div>'+
       '</td>'+
       '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06)">'+
-        '<select onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].plateforme=v;savePM();renderPM();})(this.value)" '+
+        '<select onchange="(function(v){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes['+ci+'].service=v;savePM();renderPM();})(this.value)" '+
           'style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;border:none;cursor:pointer;background:'+pColor+'22;color:'+pColor+'">'+platOpts+'</select>'+
       '</td>'+
       '<td style="padding:6px 8px;border:1px solid rgba(0,0,0,.06)">'+
@@ -2956,14 +2993,14 @@ function renderPMPlan(p, plan){
 
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
         '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888">📢 Campagnes — <span style="color:#bbb;font-size:10px;font-weight:400">Haut = Planifié · Bas = Réel</span></div>'+
-        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes.push({funnel:\'Acquisition\',campagne:\'Nouvelle campagne\',audience:\'Audience cible\',type:\'Social Ads\',plateforme:\'Facebook Ads\',kpi:\'Coût par lead\',budgets:{},reels:{}});savePM();renderPM();})()" class="btn-add">+ Ajouter une campagne</button>'+
+        '<button onclick="(function(){pmData.plans.find(function(p){return p.id==='+plan.id+'}).campagnes.push({funnel:\'Acquisition\',campagne:\'Nouvelle campagne\',audience:\'Audience cible\',type:\'Social Ads\',service:\'Facebook Ads\',kpi:\'Coût par lead\',budgets:{},reels:{}});savePM();renderPM();})()" class="btn-add">+ Ajouter une campagne</button>'+
       '</div>'+
       '<div class="gantt-wrap" style="margin-bottom:28px">'+
         '<table class="gantt" style="font-size:11px">'+
           '<thead><tr style="background:#2a2a2a">'+
             '<th style="min-width:80px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">FUNNEL</th>'+
             '<th style="min-width:200px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">CAMPAGNE / AUDIENCE</th>'+
-            '<th style="min-width:90px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">PLATEFORME</th>'+
+            '<th style="min-width:90px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">SERVICE</th>'+
             '<th style="min-width:80px;font-size:9px;color:rgba(255,255,255,.5);padding:6px 10px;text-align:left;border:1px solid rgba(255,255,255,.08)">KPI</th>'+
             thMois+thQ+
             '<th style="font-size:9px;color:rgba(255,255,255,.5);padding:5px 4px;border:1px solid rgba(255,255,255,.08)">TOTAL</th>'+
@@ -3013,7 +3050,7 @@ function renderPMPlan(p, plan){
 }
 
 
-function pmAddCamp(){ var pl=pmGetActive(); if(!pl) return; pl.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',plateforme:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}}); savePM(); renderPM(); }
+function pmAddCamp(){ var pl=pmGetActive(); if(!pl) return; pl.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',service:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}}); savePM(); renderPM(); }
 function pmAddService(){ var pl=pmGetActive(); if(!pl) return; pl.heures.push({service:'Nouveau service',adux:{},reels:{}}); savePM(); renderPM(); }
 
 
@@ -3021,7 +3058,7 @@ function fmtCAD(n){ return n===0?'—':''+n.toLocaleString('fr-CA')+' $'; }
 
 function pmAddCamp(){
   var plan=pmGetPlan(pmState.editId); if(!plan) return;
-  plan.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',plateforme:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}});
+  plan.campagnes.push({funnel:'Acquisition',campagne:'Nouvelle campagne',audience:'Audience cible',type:'Social Ads',service:'Facebook Ads',kpi:'Coût par lead',objectif:'Génération de prospects',budgets:{},reels:{}});
   savePM(); renderPM(plan);
 }
 function pmDelCamp(i){ var plan=pmGetPlan(pmState.editId); if(!plan) return; plan.campagnes.splice(i,1); savePM(); renderPM(plan); }
@@ -3052,12 +3089,12 @@ function renderSearch(q){
     if(proj.client.toLowerCase().indexOf(q)>-1) results.push({cat:'Projet',icon:'📁',label:proj.client,sub:proj.date,action:"openMod("+pi+",'"+proj.types[0]+"')"});
   });
   (trData.clients||[]).forEach(function(c){
-    if(c.nom&&c.nom.toLowerCase().indexOf(q)>-1) results.push({cat:'Suivi projet',icon:'📊',label:c.nom,sub:c.plateforme+' · '+c.budget+' $/mois',action:"SP('tracker',null)"});
+    if(c.nom&&c.nom.toLowerCase().indexOf(q)>-1) results.push({cat:'Suivi projet',icon:'📊',label:c.nom,sub:c.service+' · '+c.budget+' $/mois',action:"SP('tracker',null)"});
   });
   var allD={'Onboarding':ONB_DATA,'Meta Ads':META_DATA,'Google Ads':GOO_DATA,'Site web':WEB_DATA,'SEO':SEO_DATA,'Contenu':CON_DATA,"Banque d'heures":BHP_DATA};
   var nsM={'Onboarding':'onb','Meta Ads':'meta','Google Ads':'goo','Site web':'web','SEO':'seo','Contenu':'contenu',"Banque d'heures":'bhproc'};
   Object.keys(allD).forEach(function(mod){ allD[mod].forEach(function(sec){ sec.items.forEach(function(it){ if(it.l&&it.l.toLowerCase().indexOf(q)>-1) results.push({cat:mod,icon:'✅',label:it.l,sub:sec.title,action:"SP('"+nsM[mod]+"',null)"}); }); }); });
-  (pmData.campagnes||[]).forEach(function(c){ if((c.campagne||'').toLowerCase().indexOf(q)>-1) results.push({cat:'Plan media',icon:'📅',label:c.campagne,sub:c.plateforme,action:"SP('planmedia',null)"}); });
+  (pmData.campagnes||[]).forEach(function(c){ if((c.campagne||'').toLowerCase().indexOf(q)>-1) results.push({cat:'Plan media',icon:'📅',label:c.campagne,sub:c.service,action:"SP('planmedia',null)"}); });
   var byCat={};
   results.forEach(function(r){ if(!byCat[r.cat]) byCat[r.cat]=[]; byCat[r.cat].push(r); });
   var html='';
@@ -3083,7 +3120,7 @@ function getAlerts(){
   var moisActif=TR_MOIS_KEYS[new Date().getMonth()];
   (trData.clients||[]).forEach(function(c){
     var st=(c.statuts||{})[moisActif]||'';
-    if(!st) alerts.push({level:'warn',icon:'📊',msg:'<strong>'+c.nom+'</strong> sans statut ce mois ('+c.plateforme+')',action:"SP('tracker',null)"});
+    if(!st) alerts.push({level:'warn',icon:'📊',msg:'<strong>'+c.nom+'</strong> sans statut ce mois ('+c.service+')',action:"SP('tracker',null)"});
     else if(st==='bloc') alerts.push({level:'crit',icon:'⚠️',msg:'<strong>'+c.nom+'</strong> est <strong style="color:#b45309">bloquant</strong> ce mois',action:"SP('tracker',null)"});
   });
   Object.keys(bhClients||{}).forEach(function(projId){
@@ -3568,12 +3605,19 @@ function renderNotes(){
   var notesMois=all.filter(function(n){return n.date&&n.date.slice(0,7)===thisMonth;}).length;
 
   // Filtres projet
-  var pf='<div style="position:relative;margin-bottom:8px"><input type="text" placeholder="🔍 Rechercher un client..." value="'+(notesState.searchProj||'')+'" oninput="notesState.searchProj=this.value;renderNotes()" style="width:100%;padding:7px 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:12px;font-family:Barlow,sans-serif;outline:none"></div>'+
-    '<button onclick="notesState.filtreProj=\'tous\';notesState.searchProj=\'\';renderNotes()" class="note-filtre'+(fp==='tous'?' active':'')+'">Tous</button>'+
-    '<button onclick="notesState.filtreProj=\'libre\';renderNotes()" class="note-filtre'+(fp==='libre'?' active':'')+'" >Sans projet</button>'+
+  var projSelectOpts = '<option value="tous">Tous les clients</option>'+
+    '<option value="libre">Sans projet</option>'+
     activeProjs.map(function(pr){
-      return '<button onclick="notesState.filtreProj=\''+pr.id+'\';renderNotes()" class="note-filtre'+(String(fp)===String(pr.id)?' active':'')+'">'+pr.client+'</button>';
+      return '<option value="'+pr.id+'"' + (String(fp)===String(pr.id)?' selected':'')+'>'+pr.client+'</option>';
     }).join('');
+  var pf='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:4px">'+
+    '<select onchange="notesState.filtreProj=this.value;notesState.searchProj=\'\';renderNotes()" '+
+      'style="flex:1;max-width:320px;padding:7px 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:13px;font-weight:700;font-family:Barlow,sans-serif;background:#fff;cursor:pointer;outline:none;color:#1a1a1a">'+
+      projSelectOpts+
+    '</select>'+
+    '<input type="text" placeholder="🔍 Ou taper un nom..." value="'+(notesState.searchProj||'')+'" oninput="notesState.searchProj=this.value;renderNotes()" '+
+      'style="flex:1;max-width:240px;padding:7px 12px;border:1px solid #e8e8e8;border-radius:6px;font-size:12px;font-family:Barlow,sans-serif;outline:none">'+
+  '</div>';
 
   // Filtres type
   var tf='<button onclick="notesState.filtre=\'tous\';renderNotes()" class="note-filtre'+(ft==='tous'?' active':'')+'">Tous</button>'+
@@ -3735,7 +3779,7 @@ function buildProjetDetail(){
   var st2 = trClient ? trStatut(statut) : null;
   var suiviSection = trClient?
     '<div style="display:flex;align-items:center;gap:12px;padding:14px">'+
-      '<div style="flex:1"><div style="font-size:12px;font-weight:700">'+trClient.plateforme+'</div>'+
+      '<div style="flex:1"><div style="font-size:12px;font-weight:700">'+trClient.service+'</div>'+
         '<div style="font-size:10px;color:#888;margin-top:2px">'+trClient.budget+' $/mois · Resp: '+trClient.responsable+'</div></div>'+
       '<span style="background:'+st2.bg+';color:'+st2.color+';font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px">'+st2.emoji+' '+st2.label+'</span>'+
     '</div>' :
@@ -4080,13 +4124,13 @@ function sbLoad(){
         if(d.trData.clients && d.trData.clients.length > 0){
           d.trData.clients.forEach(function(sc){
             var found = trData.clients.find(function(c){return c.nom===sc.nom||c.id===sc.id;});
-            if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.plateforme=sc.plateforme||found.plateforme; found.plateformes=sc.plateformes||found.plateformes; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; }
+            if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.service=sc.service||found.service; found.services=sc.services||found.services; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; found.budgetP=sc.budgetP||found.budgetP; found.respP=sc.respP||found.respP; }
           });
         }
         trData.annee = d.trData.annee || trData.annee;
         trData.moisActif = d.trData.moisActif !== undefined ? d.trData.moisActif : trData.moisActif;
       }
-      // Migration multi-plateformes
+      // Migration multi-services
       trMigrateMultiPlat();
     }
     if(d.pmData){
@@ -4388,6 +4432,117 @@ function renderHomeWithDashboard(){
       '<div class="kpi '+(crits.length?'red':'bl')+'"><div class="kl">Alertes BH</div><div class="kv">'+crits.length+'</div></div>'+
     '</div>'+
     (alerts.length?'<div style="background:#fff5f5;border:1px solid rgba(212,43,43,.2);border-radius:8px;padding:10px 16px;margin-bottom:8px;font-size:12px"><span style="color:#d42b2b;font-weight:700">🚨 '+alerts.length+' alerte(s) — </span>'+alerts.slice(0,2).map(function(a){return a.msg.replace(/<[^>]+>/g,'');}).join(' · ')+'</div>':'');
+}
+
+
+function buildAide(){
+  var p = document.getElementById('p-aide'); if(!p) return;
+  p.innerHTML =
+    '<div class="hero" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"><div class="hero-inner">'+
+      '<div class="hero-tag" style="background:#6366f1"><span class="hero-dot"></span>Documentation</div>'+
+      '<h1>Aide & <span style="color:#a5b4fc">Documentation</span></h1>'+
+      '<p class="hero-sub">Posez vos questions sur l\'outil directement à Claude — il connaît tout sur ADUX Procédures</p>'+
+    '</div></div>'+
+    '<div style="max-width:800px;margin:0 auto;padding:28px 40px 80px">'+
+
+      // Chat avec Claude
+      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;overflow:hidden;margin-bottom:20px">'+
+        '<div style="background:#6366f1;padding:14px 20px;display:flex;align-items:center;gap:10px">'+
+          '<span style="font-size:18px">🤖</span>'+
+          '<div>'+
+            '<div style="font-size:13px;font-weight:800;color:#fff;font-family:Barlow Condensed,sans-serif;letter-spacing:.5px;text-transform:uppercase">Assistant ADUX</div>'+
+            '<div style="font-size:10px;color:rgba(255,255,255,.6)">Propulsé par Claude — posez vos questions sur l\'outil</div>'+
+          '</div>'+
+        '</div>'+
+        '<div id="aide-messages" style="padding:16px 20px;min-height:200px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">'+
+          '<div style="background:#f0f0ff;border-radius:8px;padding:10px 14px;font-size:12px;color:#444;line-height:1.6;max-width:85%">'+
+            '👋 Bonjour ! Je suis l\'assistant de <strong>ADUX Procédures</strong>.<br><br>'+
+            'Posez-moi vos questions sur l\'outil — comment créer un client, utiliser les banques d\'heures, le suivi projet, les notes clients, etc.<br><br>'+
+            '<em>Exemples : "Comment ajouter un service pour un client ?" · "À quoi sert le suivi hebdo ?" · "Comment fonctionne l\'historique ?"</em>'+
+          '</div>'+
+        '</div>'+
+        '<div style="padding:12px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px">'+
+          '<input id="aide-input" type="text" placeholder="Posez votre question sur l\'outil..." '+
+            'style="flex:1;padding:8px 14px;border:1px solid #e8e8e8;border-radius:20px;font-size:13px;font-family:Barlow,sans-serif;outline:none" '+
+            'onkeydown="if(event.key===\'Enter\')aideEnvoyer()">'+
+          '<button onclick="aideEnvoyer()" style="background:#6366f1;color:#fff;border:none;border-radius:20px;padding:8px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">Envoyer</button>'+
+        '</div>'+
+      '</div>'+
+
+      // Guides rapides
+      '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">📚 Guides rapides</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">'+
+        aideGuide('🏠','Accueil','Créez un nouveau client, filtrez par nom. Cliquez sur une carte pour ouvrir la fiche.')+
+        aideGuide('✅','To-do','Gérez vos tâches du jour et de la semaine par client et priorité.')+
+        aideGuide('📊','Suivi projet','Suivez le statut mensuel par client et par service. Filtrez par employé.')+
+        aideGuide('🏦','Banques d\'heures','Suivez les heures achetées, utilisées et restantes par client. Ajoutez une date de fin.')+
+        aideGuide('📝','Notes clients','Journalisez vos appels, courriels et rencontres par client.')+
+        aideGuide('📋','Checklists','Procédures d\'onboarding et de suivi par client. Accès via la fiche client.')+
+        aideGuide('📅','Suivi hebdo','Priorités et bloquants de la semaine pour les réunions lundi/jeudi.')+
+        aideGuide('⏱','Feuilles de temps','Enregistrez vos heures par client et par service.')+
+      '</div>'+
+    '</div>';
+}
+
+function aideGuide(icon, titre, desc){
+  return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:14px 16px">'+
+    '<div style="font-size:16px;margin-bottom:6px">'+icon+'</div>'+
+    '<div style="font-size:12px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#1a1a1a;margin-bottom:4px">'+titre+'</div>'+
+    '<div style="font-size:11px;color:#888;line-height:1.5">'+desc+'</div>'+
+  '</div>';
+}
+
+var aideHistory = [];
+var aideSYSTEM = 'Tu es l\'assistant de l\'outil interne ADUX Procédures, une application web de gestion de projets pour l\'agence de marketing numérique ADUX Stratégies. ' +
+  'L\'outil contient ces sections : Accueil (créer des clients, voir les projets actifs), To-do (tâches du jour/semaine), Suivi projet (statut mensuel par client et par service), ' +
+  'Banques d\'heures (heures achetées/utilisées/restantes, date début/fin), Notes clients (journal des appels, courriels, rencontres), ' +
+  'Checklists (procédures d\'onboarding par client), Suivi hebdo (priorités et bloquants de la semaine), Feuilles de temps (entrée des heures par client), ' +
+  'Paramètres (export/import JSON, sync Supabase). ' +
+  'Équipe ADUX : Patrice, Francis, Molka, Natalia (gestionnaires de compte), Marie-Ève Graton (Design), Marie-Ève Boucher (RH), Charles-Éric (UI/UX). ' +
+  'Taux horaire : 175$/h. Les données sont synchronisées en temps réel via Supabase. ' +
+  'Réponds en français, de façon concise et pratique. Tu aides les membres de l\'équipe à utiliser l\'outil.';
+
+async function aideEnvoyer(){
+  var input = document.getElementById('aide-input');
+  var msg = (input.value||'').trim();
+  if(!msg) return;
+  input.value = '';
+
+  var msgs = document.getElementById('aide-messages');
+
+  // Afficher message utilisateur
+  msgs.innerHTML += '<div style="background:#6366f1;border-radius:8px;padding:10px 14px;font-size:12px;color:#fff;line-height:1.6;max-width:85%;align-self:flex-end;margin-left:auto">'+msg.replace(/</g,'&lt;')+'</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Indicateur chargement
+  var loadId = 'load-'+Date.now();
+  msgs.innerHTML += '<div id="'+loadId+'" style="background:#f0f0ff;border-radius:8px;padding:10px 14px;font-size:12px;color:#888;max-width:85%">⏳ Claude réfléchit...</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  aideHistory.push({role:'user', content: msg});
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: aideSYSTEM,
+        messages: aideHistory
+      })
+    });
+    var data = await resp.json();
+    var answer = data.content && data.content[0] ? data.content[0].text : 'Désolé, je n\'ai pas pu répondre.';
+    aideHistory.push({role:'assistant', content: answer});
+
+    var loadEl = document.getElementById(loadId);
+    if(loadEl) loadEl.outerHTML = '<div style="background:#f0f0ff;border-radius:8px;padding:10px 14px;font-size:12px;color:#444;line-height:1.6;max-width:85%">'+answer.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')+'</div>';
+  } catch(e) {
+    var loadEl = document.getElementById(loadId);
+    if(loadEl) loadEl.outerHTML = '<div style="background:#fff5f5;border-radius:8px;padding:10px 14px;font-size:12px;color:#dc2626;max-width:85%">Erreur de connexion. Vérifiez votre connexion internet.</div>';
+  }
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 </script>
