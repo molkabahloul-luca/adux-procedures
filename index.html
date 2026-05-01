@@ -27,7 +27,7 @@ body{background:var(--bg);color:#1a1a1a;font-family:'Barlow',sans-serif;font-siz
 
 /* HERO */
 .hero{background:#2a2a2a;position:relative;overflow:hidden;padding:48px 40px 40px}
-.hero-inner{max-width:880px;margin:0 auto;position:relative;z-index:1}
+.hero-inner{max-width:880px;margin:0 auto;position:relative;z-index:1;overflow:visible}
 .hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px 4px 8px;border-radius:3px;margin-bottom:18px}
 .hero-dot{width:6px;height:6px;background:rgba(255,255,255,.6);border-radius:50%}
 .hero h1{font-weight:900;font-size:clamp(32px,5vw,56px);line-height:.95;letter-spacing:-1px;color:#fff;text-transform:uppercase;margin-bottom:8px;font-family:'Barlow Condensed',sans-serif}
@@ -1807,7 +1807,7 @@ function renderTracker(){
   }).join('');
 
   p.innerHTML =
-    '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d)"><div class="hero-inner">'+
+    '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d);position:relative"><div class="hero-inner">'+
       '<div class="hero-tag"><span class="hero-dot"></span>Gestion · Suivi projet</div>'+
       '<h1>Suivi <span style="color:var(--red)">projet</span></h1><p class="hero-sub">Statut mensuel par client — avancements, bloquants et notes</p>'+
       '<div style="display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap">'+
@@ -3904,7 +3904,7 @@ var TODO_PRIOS = {
 var TODO_JOURS_KEYS = ['lun','mar','mer','jeu','ven','sam','dim'];
 var TODO_JOURS_LABELS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
-var todoState = { vue: 'semaine', jourActif: new Date().getDay() === 0 ? 6 : new Date().getDay()-1, semaineOffset: 0, collapsed: {} };
+var todoState = { vue: 'semaine', jourActif: new Date().getDay() === 0 ? 6 : new Date().getDay()-1, semaineOffset: 0, collapsed: {}, expanded: {} };
 
 function tdToggleJour(ji){ todoState.collapsed[ji]=!todoState.collapsed[ji]; renderTodo(); }
 function buildTodo(){ renderTodo(); }
@@ -3970,383 +3970,166 @@ function renderTodo(){
   var p=document.getElementById('p-todo'); if(!p) return;
   var dates = tdGetWeekDates();
   var today = new Date().toISOString().slice(0,10);
-  var todayIdx = dates.indexOf(today);
   var activeProjs = projects.filter(function(pr){return !pr._archived;});
-
-  var totalDone = todoData.taches.filter(function(t){return t.done;}).length;
   var totalLeft = todoData.taches.filter(function(t){return !t.done;}).length;
   var urgent = todoData.taches.filter(function(t){return !t.done && t.priorite==='haute';}).length;
+  var totalDone = todoData.taches.filter(function(t){return t.done;}).length;
+  var RESP_LIST = ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
 
-  // Build a task card
   function mkCard(t){
     var pr = TODO_PRIOS[t.priorite]||TODO_PRIOS.normale;
+    var overdue = t.dateLimit && t.dateLimit < today && !t.done;
+    var isExp = todoState.expanded[t.id];
     var prOpts = Object.keys(TODO_PRIOS).map(function(k){
       return '<option value="'+k+'"'+(k===t.priorite?' selected':'')+'>'+TODO_PRIOS[k].emoji+' '+TODO_PRIOS[k].label+'</option>';
     }).join('');
-    var clDatalist = '<datalist id="td-cl-list-'+t.id+'">'+activeProjs.map(function(pr){
-      return '<option value="'+pr.client+'"></option>';
-    }).join('')+'</datalist>';
-    var respOpts2 = '<option value="">— Responsable —</option>'+
-      ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'].map(function(r){
-        return '<option value="'+r+'"'+(r===t.responsable?' selected':'')+'>'+r+'</option>';
-      }).join('');
-    var overdue = t.dateLimit && t.dateLimit < today && !t.done;
-    return '<div class="todo-item'+(t.done?' done':'')+' todo-prio-'+t.priorite+'" id="tdi-'+t.id+'">'+
-      '<input type="checkbox" class="todo-check"'+(t.done?' checked':'')+' data-id="'+t.id+'" onchange="tdSet(this.dataset.id*1,\'done\',this.checked)">'+
-      '<div style="flex:1;min-width:0">'+
-        '<input id="td-txt-'+t.id+'" type="text" value="'+t.texte.replace(/"/g,'&quot;')+'" placeholder="Tâche…" '+
-          'data-id="'+t.id+'" data-field="texte" onchange="tdSet(this.dataset.id*1,this.dataset.field,this.value)" '+
-          'class="todo-txt" style="width:100%;font-size:13px;font-weight:600;border:none;outline:none;background:transparent;color:#1a1a1a;font-family:Barlow,sans-serif;'+(t.done?'text-decoration:line-through;color:#bbb':'')+'" >'+
-        '<div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">'+
-          '<select data-id="'+t.id+'" data-field="priorite" onchange="tdSet(this.dataset.id*1,this.dataset.field,this.value)" '+
-            'style="font-size:9px;font-weight:700;border:none;border-radius:3px;padding:2px 6px;background:'+pr.bg+';color:'+pr.color+';cursor:pointer;font-family:Barlow,sans-serif">'+prOpts+'</select>'+
-          clDatalist+
-          '<input list="td-cl-list-'+t.id+'" value="'+t.client.replace(/"/g,'&quot;')+'" placeholder="🔍 Client…" '+
-            'data-id="'+t.id+'" data-field="client" onchange="tdSet(this.dataset.id*1,this.dataset.field,this.value)" '+
-            'style="font-size:9px;border:1px solid #e8e8e8;border-radius:3px;padding:2px 6px;background:#f5f4f2;font-family:Barlow,sans-serif;color:#333;width:140px;outline:none">'+
-          '<select data-id="'+t.id+'" data-field="responsable" onchange="tdSet(this.dataset.id*1,this.dataset.field,this.value)" '+
-            'style="font-size:9px;border:1px solid #e0e8ff;border-radius:3px;padding:2px 6px;background:#f0f4ff;cursor:pointer;font-family:Barlow,sans-serif;color:#1d4ed8;font-weight:700">'+respOpts2+'</select>'+
-          '<input type="date" value="'+t.dateLimit+'" data-id="'+t.id+'" data-field="dateLimit" onchange="tdSet(this.dataset.id*1,this.dataset.field,this.value)" '+
-            'style="font-size:9px;border:1px solid '+(overdue?'#dc2626':'#e8e8e8')+';border-radius:3px;padding:2px 6px;background:'+(overdue?'#fee2e2':'#f5f4f2')+';color:'+(overdue?'#dc2626':'#666')+';font-family:IBM Plex Mono,monospace">'+
-          (overdue?'<span style="font-size:9px;color:#dc2626;font-weight:700">⚠ En retard</span>':'')+
-        '</div>'+
+    var respOpts = '<option value="">— Resp. —</option>'+RESP_LIST.map(function(r){
+      return '<option value="'+r+'"'+(r===t.responsable?' selected':'')+'>'+r+'</option>';
+    }).join('');
+    var clDatalist = '<datalist id="tdcl'+t.id+'">'+activeProjs.map(function(q){return '<option value="'+q.client+'"></option>';}).join('')+'</datalist>';
+    return '<div style="border-bottom:1px solid #f0f0f0;'+(t.done?'opacity:.5':'')+'">'+
+      '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer" onclick="todoState.expanded['+t.id+']=!todoState.expanded['+t.id+'];renderTodo()">'+
+        '<input type="checkbox" '+(t.done?'checked':'')+' onclick="event.stopPropagation()" onchange="tdSet('+t.id+',\'done\',this.checked)" style="width:13px;height:13px;cursor:pointer;accent-color:#d42b2b;flex-shrink:0">'+
+        '<span style="flex:1;font-size:12px;font-weight:600;color:'+(t.done?'#bbb':'#1a1a1a')+';'+(t.done?'text-decoration:line-through;':'')+' font-family:Barlow,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.texte||'<em style="color:#ccc">Sans titre</em>')+'</span>'+
+        '<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:'+pr.bg+';color:'+pr.color+';font-weight:700">'+pr.emoji+'</span>'+
+        (overdue?'<span style="font-size:9px;color:#dc2626">⚠</span>':'')+
+        '<span style="font-size:9px;color:#ddd">'+(isExp?'▲':'▼')+'</span>'+
       '</div>'+
-      '<button data-id="'+t.id+'" onclick="tdDel(this.dataset.id*1)" style="background:transparent;border:none;color:#e8e8e8;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'+
+      (isExp?
+        '<div style="padding:8px 10px;background:#fafafa;border-top:1px solid #f0f0f0;display:flex;flex-direction:column;gap:6px">'+
+          '<input type="text" value="'+t.texte.replace(/"/g,'&quot;')+'" placeholder="Titre…" onchange="tdSet('+t.id+',\'texte\',this.value)" style="width:100%;padding:5px 8px;border:1px solid #e8e8e8;border-radius:5px;font-size:12px;font-family:Barlow,sans-serif;outline:none">'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">'+
+            '<select onchange="tdSet('+t.id+',\'priorite\',this.value)" style="padding:4px 6px;border:1px solid #e8e8e8;border-radius:5px;font-size:10px;font-weight:700;background:'+pr.bg+';color:'+pr.color+';cursor:pointer;font-family:Barlow,sans-serif">'+prOpts+'</select>'+
+            '<input type="date" value="'+t.dateLimit+'" onchange="tdSet('+t.id+',\'dateLimit\',this.value)" style="padding:4px 6px;border:1px solid '+(overdue?'#fca5a5':'#e8e8e8')+';border-radius:5px;font-size:10px;font-family:IBM Plex Mono,monospace;background:'+(overdue?'#fff5f5':'#fff')+';outline:none">'+
+            clDatalist+
+            '<input list="tdcl'+t.id+'" value="'+t.client.replace(/"/g,'&quot;')+'" placeholder="🔍 Client…" onchange="tdSet('+t.id+',\'client\',this.value)" style="padding:4px 6px;border:1px solid #e8e8e8;border-radius:5px;font-size:10px;font-family:Barlow,sans-serif;outline:none;background:#fff">'+
+            '<select onchange="tdSet('+t.id+',\'responsable\',this.value)" style="padding:4px 6px;border:1px solid #e0e8ff;border-radius:5px;font-size:10px;font-weight:700;background:#f0f4ff;color:#1d4ed8;cursor:pointer;font-family:Barlow,sans-serif">'+respOpts+'</select>'+
+          '</div>'+
+          '<button onclick="event.stopPropagation();tdDel('+t.id+')" style="background:transparent;border:none;color:#dc2626;font-size:10px;cursor:pointer;font-family:Barlow,sans-serif;text-align:left;padding:0">🗑 Supprimer</button>'+
+        '</div>'
+      :'')+
     '</div>';
   }
 
-  var html = '';
+  // ── GRILLE 2×3 style planner ──────────────────────────
+  // Grouper: [Lun,Mar], [Mer,Jeu], [Ven, Sam+Dim]
+  var groups = [[0,1],[2,3],[4,5],[6,null]];
+  // Actually do 2 columns: [0,1,2,3] left + [4,5,6] right? No - do 2 per row like image
+  var pairs = [[0,1],[2,3],[4,5]];
+  // Day 6 (Dim) goes with Sat
+  var pairsSat = [[0,1],[2,3],[4,6]]; // Mon/Tue, Wed/Thu, Fri/Sun
+  // Best: Mon/Tue, Wed/Thu, Fri/Weekend(Sat+Sun combined)
 
-  if(todoState.vue==='semaine'){
-    // Vue semaine — une ligne par jour
-    var rows = TODO_JOURS_KEYS.map(function(jk,ji){
-      var date = dates[ji];
-      var isToday = date===today;
-      var tachesJour = todoData.taches.filter(function(t){
-        if(t.dateLimit) return t.dateLimit===date;
-        // Sans date : afficher selon semaineOffset ET jourIdx
-        // Si pas de semaineOffset défini (anciennes tâches) → afficher sur semaine courante
-        var tOffset = (t.semaineOffset===undefined||t.semaineOffset===null) ? 0 : t.semaineOffset;
-        return tOffset===(todoState.semaineOffset||0) && t.jourIdx===ji;
-      });
-      tachesJour.sort(function(a,b){ if(a.done!==b.done) return a.done?1:-1; var o={haute:0,normale:1,basse:2}; return (o[a.priorite]||1)-(o[b.priorite]||1); });
-      var doneJ = tachesJour.filter(function(t){return t.done;}).length;
-      var hasLeft = tachesJour.filter(function(t){return !t.done;}).length;
-      var cards = tachesJour.length ? tachesJour.map(mkCard).join('') : '';
-      return '<div style="border:1px solid '+(isToday?'rgba(212,43,43,.3)':'rgba(0,0,0,.07)')+';border-radius:8px;overflow:hidden;margin-bottom:8px;background:'+(isToday?'#fff8f8':'#fff')+'">'+
-        // En-tête du jour
-        '<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:'+(isToday?'rgba(212,43,43,.06)':'#f9f8f6')+';border-bottom:1px solid '+(isToday?'rgba(212,43,43,.1)':'rgba(0,0,0,.05)')+'">'+
-          '<div style="display:flex;align-items:center;gap:6px;min-width:80px">'+
-          '<span style="font-size:11px;color:#bbb">'+(todoState.collapsed[ji]?'›':'⌄')+'</span>'+
-          '<span style="font-size:12px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:'+(isToday?'var(--red)':'#888')+'">'+(isToday?'▶ ':'')+TODO_JOURS_LABELS[ji]+'</span>'+
-        '</div>'+
-          '<div style="font-size:10px;color:#bbb;font-family:IBM Plex Mono,monospace">'+date+'</div>'+
-          (tachesJour.length?'<div style="margin-left:auto;font-size:10px;font-weight:700;color:'+(doneJ===tachesJour.length?'#16a34a':'#f59e0b')+'">'+doneJ+'/'+tachesJour.length+' ✓</div>':'<div style="margin-left:auto;font-size:10px;color:#ddd">Aucune tâche</div>')+
-          '<button onclick="event.stopPropagation();tdAdd('+ji+')" style="background:var(--red);border:none;color:#fff;border-radius:5px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">+ Ajouter</button>'+
-        '</div>'+
-        // Tâches
-        (!todoState.collapsed[ji] && cards?'<div style="padding:8px 12px;display:flex;flex-direction:column;gap:6px">'+cards+'</div>':'')+
-      '</div>';
-    }).join('');
-    html = '<div style="display:flex;flex-direction:column">'+rows+'</div>';
-
-  } else {
-    // Vue jour
-    var ji = todoState.jourActif;
-    var date = dates[ji]||today;
-    var tachesJour = todoData.taches.filter(function(t){ return t.dateLimit===date; });
-    // Sort: haute first, then normale, then basse, done at end
-    tachesJour.sort(function(a,b){
-      if(a.done!==b.done) return a.done?1:-1;
-      var ordre={haute:0,normale:1,basse:2};
-      return (ordre[a.priorite]||1)-(ordre[b.priorite]||1);
+  var dayCards = TODO_JOURS_KEYS.map(function(jk,ji){
+    var date = dates[ji];
+    var isToday = date===today;
+    var tasks = todoData.taches.filter(function(t){
+      if(t.dateLimit) return t.dateLimit===date;
+      var off=(t.semaineOffset===undefined||t.semaineOffset===null)?0:t.semaineOffset;
+      return off===(todoState.semaineOffset||0) && t.jourIdx===ji;
     });
-    var dayNav = TODO_JOURS_KEYS.map(function(jk,k){
-      var isActive=k===ji; var isToday=dates[k]===today;
-      return '<button onclick="todoState.jourActif='+k+';renderTodo()" '+
-        'style="padding:6px 14px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;'+
-        (isActive?'background:var(--red);color:#fff':'background:#f5f4f2;color:'+(isToday?'var(--red)':'#888'))+
-        '">'+TODO_JOURS_LABELS[k].slice(0,3)+(isToday?' ●':'')+'</button>';
-    }).join('');
-    var cards = tachesJour.length ? tachesJour.map(mkCard).join('') :
-      '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:32px;margin-bottom:8px">✅</div><div style="font-size:12px">Aucune tâche ce jour</div></div>';
-    html = '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">'+dayNav+'</div>'+
-      '<div style="display:flex;flex-direction:column;gap:8px">'+cards+'</div>'+
-      '<button onclick="tdAdd('+ji+')" class="btn-add" style="margin-top:12px;width:100%;padding:10px;justify-content:center">+ Ajouter une tâche</button>';
-  }
+    tasks.sort(function(a,b){
+      if(a.done!==b.done) return a.done?1:-1;
+      var o={haute:0,normale:1,basse:2};
+      return (o[a.priorite]||1)-(o[b.priorite]||1);
+    });
+    var left = tasks.filter(function(t){return !t.done;}).length;
+    var d = new Date(date);
+    var dayName = TODO_JOURS_LABELS[ji];
+    var dateLabel = d.toLocaleDateString('fr-CA',{day:'numeric',month:'short'});
+
+    return '<div data-ji="'+ji+'" style="background:#fff;border:1px solid '+(isToday?'rgba(212,43,43,.4)':'#e8e8e8')+';border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:180px">'+
+      // Header
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:2px solid '+(isToday?'#d42b2b':'#f0f0f0')+'">'+
+        '<div>'+
+          '<div style="font-size:13px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.8px;color:'+(isToday?'#d42b2b':'#1a1a1a')+'">'+dayName+'</div>'+
+          '<div style="font-size:10px;color:#bbb">'+dateLabel+'</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:6px">'+
+          (left>0?'<span style="background:'+(isToday?'#d42b2b':'#f0f0f0')+';color:'+(isToday?'#fff':'#888')+';border-radius:12px;font-size:9px;font-weight:800;padding:2px 7px">'+left+'</span>':'')+
+          '<button onclick="tdAdd('+ji+')" style="background:'+(isToday?'#d42b2b':'#f5f4f2')+';border:none;color:'+(isToday?'#fff':'#888')+';border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">+</button>'+
+        '</div>'+
+      '</div>'+
+      // Tasks
+      '<div style="flex:1;overflow-y:auto">'+
+        (tasks.length ? tasks.map(mkCard).join('') :
+          '<div style="padding:20px 14px;text-align:center;color:#e0e0e0;font-size:11px">Aucune tâche</div>')+
+      '</div>'+
+    '</div>';
+  });
+
+  // Grouper en 2 colonnes × 3 lignes + dimanche seul
+  var grid = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+    dayCards[0]+ // Lundi
+    dayCards[1]+ // Mardi
+    dayCards[2]+ // Mercredi
+    dayCards[3]+ // Jeudi
+    dayCards[4]+ // Vendredi
+    // Sam + Dim groupés
+    '<div style="display:grid;grid-template-rows:1fr 1fr;gap:10px">'+
+      '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #f0f0f0">'+
+          '<div style="font-size:12px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.8px;color:#888">'+TODO_JOURS_LABELS[5]+'</div>'+
+          '<button onclick="tdAdd(5)" style="background:#f5f4f2;border:none;color:#888;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">+</button>'+
+        '</div>'+
+        '<div>'+
+          (function(){
+            var tasks5 = todoData.taches.filter(function(t){return t.dateLimit===dates[5]||(t.jourIdx===5&&(t.semaineOffset||0)===(todoState.semaineOffset||0)&&!t.dateLimit);});
+            return tasks5.length ? tasks5.map(mkCard).join('') : '<div style="padding:12px 14px;color:#e0e0e0;font-size:11px;text-align:center">Aucune tâche</div>';
+          })()+
+        '</div>'+
+      '</div>'+
+      '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #f0f0f0">'+
+          '<div style="font-size:12px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.8px;color:#888">'+TODO_JOURS_LABELS[6]+'</div>'+
+          '<button onclick="tdAdd(6)" style="background:#f5f4f2;border:none;color:#888;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">+</button>'+
+        '</div>'+
+        '<div>'+
+          (function(){
+            var tasks6 = todoData.taches.filter(function(t){return t.dateLimit===dates[6]||(t.jourIdx===6&&(t.semaineOffset||0)===(todoState.semaineOffset||0)&&!t.dateLimit);});
+            return tasks6.length ? tasks6.map(mkCard).join('') : '<div style="padding:12px 14px;color:#e0e0e0;font-size:11px;text-align:center">Aucune tâche</div>';
+          })()+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
 
   p.innerHTML =
     '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d)"><div class="hero-inner">'+
       '<div class="hero-tag"><span class="hero-dot"></span>To-do</div>'+
-      '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:8px">'+
-        '<h1 style="margin:0">Tâches <span style="color:var(--red)">'+tdWeekLabel()+'</span></h1>'+
-        '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">'+
-          '<button onclick="todoState.semaineOffset=(todoState.semaineOffset||0)-1;renderTodo()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">← Préc.</button>'+
-          ((todoState.semaineOffset||0)!==0?'<button onclick="todoState.semaineOffset=0;renderTodo()" style="background:var(--red);border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">Aujourd\'hui</button>':'')+
-          '<button onclick="todoState.semaineOffset=(todoState.semaineOffset||0)+1;renderTodo()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">Suiv. →</button>'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">'+
+        '<div>'+
+          '<h1 style="margin:0 0 4px">Tâches <span style="color:var(--red)">'+tdWeekLabel()+'</span></h1>'+
+          '<p class="hero-sub" style="margin:0">'+totalLeft+' à faire · '+urgent+' urgent'+(totalDone?' · '+totalDone+' complétées':'')+'</p>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'+
+          '<div style="position:relative">'+
+            '<div style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:4px">'+
+              '<button onclick="todoState.semaineOffset=(todoState.semaineOffset||0)-1;renderTodo()" style="background:transparent;border:none;color:#fff;padding:4px 12px;font-size:18px;cursor:pointer;line-height:1">‹</button>'+
+              '<button onclick="renderTodo()" style="background:transparent;border:none;cursor:pointer;padding:4px 12px;min-width:150px;text-align:center">'+
+                '<div style="font-size:12px;font-weight:800;color:#fff;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px">'+tdWeekLabel()+' 📅</div>'+
+                '<div style="font-size:9px;color:rgba(255,255,255,.45);margin-top:1px">'+tdGetWeekDates()[0]+' – '+tdGetWeekDates()[6]+'</div>'+
+              '</button>'+
+              '<button onclick="todoState.semaineOffset=(todoState.semaineOffset||0)+1;renderTodo()" style="background:transparent;border:none;color:#fff;padding:4px 12px;font-size:18px;cursor:pointer;line-height:1">›</button>'+
+            '</div>'+
+
+          '</div>'+
+          ((todoState.semaineOffset||0)!==0?'<button onclick="todoState.semaineOffset=0;renderTodo()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">↩ Maintenant</button>':'')+
         '</div>'+
       '</div>'+
-      '<p class="hero-sub">Organisées par jour · Client · Responsable · Priorité</p>'+
     '</div></div>'+
 
-    '<div style="max-width:1200px;margin:0 auto;padding:24px 32px 80px">'+
-
-      // Stats
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px">'+
-        '<div class="kpi red"><div class="kl">À faire</div><div class="kv">'+totalLeft+'</div><div class="ks">tâches restantes</div></div>'+
-        '<div class="kpi '+(urgent?'red':'gy')+'"><div class="kl">Urgent</div><div class="kv">'+urgent+'</div><div class="ks">priorité haute</div></div>'+
-        '<div class="kpi gr"><div class="kl">Complétées</div><div class="kv">'+totalDone+'</div><div class="ks">cette semaine</div></div>'+
-      '</div>'+
-
-      // Toggle vue + Clear
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">'+
-        '<div style="display:flex;gap:6px">'+
-          '<button onclick="todoState.vue=\'semaine\';renderTodo()" style="padding:7px 16px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;'+(todoState.vue==='semaine'?'background:var(--red);color:#fff':'background:#f5f4f2;color:#888')+'">📅 Vue semaine</button>'+
-          '<button onclick="todoState.vue=\'jour\';renderTodo()" style="padding:7px 16px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;'+(todoState.vue==='jour'?'background:var(--red);color:#fff':'background:#f5f4f2;color:#888')+'">📆 Vue jour</button>'+
+    '<div style="max-width:1100px;margin:0 auto;padding:16px 24px 80px">'+
+      '<div style="display:flex;gap:16px;align-items:flex-start">'+
+        '<div style="flex:1;min-width:0">'+
+          (totalDone?'<div style="text-align:right;margin-bottom:10px"><button onclick="tdClearDone()" style="font-size:10px;font-weight:700;color:#bbb;background:transparent;border:1px solid #e8e8e8;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:Barlow,sans-serif">🗑 Effacer complétées ('+totalDone+')</button></div>':'')+
+          grid+
         '</div>'+
-        (totalDone?'<button onclick="tdClearDone()" style="font-size:10px;font-weight:700;color:#bbb;background:transparent;border:1px solid #e8e8e8;border-radius:5px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif">🗑 Effacer les complétées ('+totalDone+')</button>':'')+
-      '</div>'+
-
-      html+
-
-    '</div>';
-}
-
-
-// ══════════════════════════════════════════
-//  SUPABASE — SYNCHRONISATION DONNÉES
-// ══════════════════════════════════════════
-var SB_URL = 'https://lrloencnawphkoctmgec.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxybG9lbmNuYXdwaGtvY3RtZ2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjg0MjUsImV4cCI6MjA5MjcwNDQyNX0.9Pw0_PP8hmkvHpi2UUL-HGgxlD2PKsMpgi49NETZJG0';
-var SB_WK  = 'adux-molkaadux';
-
-var sbSyncing = false;
-var sbLastSync = null;
-
-function sbHeaders(){
-  return {
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-    'Prefer': 'return=minimal'
-  };
-}
-
-// Charger toutes les données depuis Supabase au démarrage
-function sbLoad(){
-  var indicator = document.getElementById('sb-status');
-  if(indicator) indicator.textContent = '⏳ Synchro...';
-  fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
-    headers: sbHeaders()
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
-    if(!rows || !rows.length || !rows[0].data) {
-      sbSave(); // première fois — sauvegarder les données locales
-      return;
-    }
-    var d = rows[0].data;
-    // Restaurer toutes les données
-    if(d.projects   && d.projects.length)   projects   = d.projects;
-    if(d.states)     Object.assign(states,   d.states);
-    if(d.bhData)     Object.assign(bhData,   d.bhData);
-    if(d.bhClients)  Object.assign(bhClients,d.bhClients);
-    if(d.trData){
-      var sbClients = (d.trData.clients||[]).length;
-      var codeClients = trData.clients.length;
-      if(sbClients >= codeClients){
-        trData = d.trData;
-      } else {
-        if(d.trData.clients && d.trData.clients.length > 0){
-          d.trData.clients.forEach(function(sc){
-            var found = trData.clients.find(function(c){return c.nom===sc.nom||c.id===sc.id;});
-            if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.service=sc.service||found.service; found.services=sc.services||found.services; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; found.budgetP=sc.budgetP||found.budgetP; found.respP=sc.respP||found.respP; }
-          });
-        }
-        trData.annee = d.trData.annee || trData.annee;
-        trData.moisActif = d.trData.moisActif !== undefined ? d.trData.moisActif : trData.moisActif;
-      }
-      // Migration multi-services
-      trMigrateMultiPlat();
-    }
-    if(d.pmData){
-      // Migration: si l'ancien format (avec campagnes directement) → convertir
-      if(d.pmData.campagnes && !d.pmData.plans){
-        pmData = { plans: [Object.assign({id:Date.now(),projId:null,annee:new Date().getFullYear()}, d.pmData)], activeId: null };
-      } else {
-        pmData = d.pmData;
-      }
-    }
-    if(d.ftData)     ftData     = d.ftData;
-    if(d.hebdoData)  Object.assign(hebdoData,d.hebdoData);
-    if(d.devisData)  devisData  = d.devisData;
-    if(d.notesData)  notesData  = d.notesData;
-    if(d.todoData)   todoData   = d.todoData;
-    if(d.bhClients && d.bhClients.nextNum) devisData.nextNum = d.devisData ? d.devisData.nextNum : devisData.nextNum;
-    sbLastSync = new Date();
-    if(indicator) indicator.textContent = '✓ Synchro ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-    // Re-render current panel
-    syncClientsToProjects();
-    renderProjects();
-    updateNotifBadge();
-    updateCtxBar();
-    console.log('Supabase: données chargées');
-  })
-  .catch(function(e){
-    if(indicator) indicator.textContent = '⚠ Hors ligne';
-    console.warn('Supabase offline:', e);
-  });
-}
-
-// Sauvegarder toutes les données vers Supabase
-function sbSave(){
-  if(sbSyncing) return;
-  sbSyncing = true;
-  var indicator = document.getElementById('sb-status');
-  if(indicator) indicator.textContent = '💾 Sauvegarde...';
-  var payload = {
-    workspace_key: SB_WK,
-    data: {
-      projects:   projects,
-      states:     states,
-      bhData:     bhData,
-      bhClients:  bhClients,
-      trData:     trData,
-      pmData:     pmData,
-      ftData:     ftData,
-      hebdoData:  hebdoData,
-      devisData:  devisData,
-      notesData:  notesData,
-      todoData:   todoData,
-    },
-    updated_at: new Date().toISOString()
-  };
-  // Use upsert to create or update
-  var saveHeaders = sbHeaders();
-  saveHeaders['Prefer'] = 'resolution=merge-duplicates';
-  fetch(SB_URL + '/rest/v1/adux_data', {
-    method: 'POST',
-    headers: saveHeaders,
-    body: JSON.stringify(payload)
-  })
-  .then(function(r){
-    sbSyncing = false;
-    sbLastSync = new Date();
-    if(indicator) indicator.textContent = '✓ Sauvegardé ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-  })
-  .catch(function(e){
-    sbSyncing = false;
-    if(indicator) indicator.textContent = '⚠ Erreur synchro';
-    console.warn('Supabase save error:', e);
-  });
-}
-
-// Rafraîchir les données depuis Supabase (pour voir les changements des collègues)
-function sbRefresh(){
-  sbLoad();
-}
-
-// Synchro automatique toutes les 30 secondes
-setInterval(sbRefresh, 30000);
-
-// Override des fonctions de sauvegarde pour synchro Supabase
-var _sbSaveDebounce = null;
-function sbSaveDebounced(){
-  clearTimeout(_sbSaveDebounce);
-  _sbSaveDebounce = setTimeout(sbSave, 1500);
-}
-
-// Patch toutes les fonctions save existantes
-var _origSaveProjects = saveProjects;
-saveProjects = function(){ _origSaveProjects(); sbSaveDebounced(); };
-
-var _origSaveBH = saveBH;
-saveBH = function(){ _origSaveBH(); sbSaveDebounced(); };
-
-var _origSaveBHC = saveBHC;
-saveBHC = function(){ _origSaveBHC(); sbSaveDebounced(); };
-
-var _origSaveTR = saveTR;
-saveTR = function(){ _origSaveTR(); sbSaveDebounced(); };
-
-var _origSavePM = savePM;
-savePM = function(){ _origSavePM(); sbSaveDebounced(); };
-
-var _origSaveFT = saveFT;
-saveFT = function(){ _origSaveFT(); sbSaveDebounced(); };
-
-var _origSaveHebdo = saveHebdo;
-saveHebdo = function(){ _origSaveHebdo(); sbSaveDebounced(); };
-
-var _origSaveDevis = saveDevis;
-saveDevis = function(){ _origSaveDevis(); sbSaveDebounced(); };
-
-var _origSaveNotes = saveNotes;
-saveNotes = function(){ _origSaveNotes(); sbSaveDebounced(); };
-
-var _origSaveTodo = saveTodo;
-saveTodo = function(){ _origSaveTodo(); sbSaveDebounced(); };
-
-// Lancer la synchro au démarrage
-window.addEventListener('load', function(){
-  setTimeout(sbLoad, 800);
-});
-
-
-function buildSettings(){
-  var p = document.getElementById('p-settings'); if(!p) return;
-  p.innerHTML =
-    '<div class="hero" style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d)"><div class="hero-inner">'+
-      '<div class="hero-tag"><span class="hero-dot"></span>Paramètres</div>'+
-      '<h1>Paramètres <span style="color:var(--red)">ADUX</span></h1>'+
-      '<p class="hero-sub">Gestion des données et configuration</p>'+
-    '</div></div>'+
-    '<div style="max-width:700px;margin:0 auto;padding:32px 40px 80px">'+
-
-      // Supabase status
-      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
-        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">🔄 Synchronisation Supabase</div>'+
-        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
-          '<div id="sb-status-full" style="font-size:13px;font-weight:600;color:#555">'+
-            (document.getElementById('sb-status')?document.getElementById('sb-status').textContent:'...')+
-          '</div>'+
-          '<button onclick="sbRefresh();buildSettings()" class="btn-add">🔄 Synchroniser maintenant</button>'+
-        '</div>'+
-        '<div style="font-size:11px;color:#aaa">Les données sont synchronisées automatiquement toutes les 30 secondes entre tous les membres de l\'équipe.</div>'+
-      '</div>'+
-
-      // Export / Import
-      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
-        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">💾 Sauvegarde des données</div>'+
-        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
-          '<button onclick="exportData()" style="display:flex;align-items:center;gap:8px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">⬇ Exporter en JSON</button>'+
-          '<label style="display:flex;align-items:center;gap:8px;background:#f5f4f2;color:#555;border:1px solid #e8e8e8;border-radius:6px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif">⬆ Importer un JSON<input type="file" accept=".json" onchange="importData(this)" style="display:none"></label>'+
-        '</div>'+
-        '<div style="font-size:11px;color:#aaa">Exportez vos données en JSON pour une copie de sauvegarde. En cas de problème avec Supabase, vous pouvez restaurer depuis ce fichier.</div>'+
-      '</div>'+
-
-      // Infos
-      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:20px 24px;margin-bottom:16px">'+
-        '<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px">ℹ️ Informations</div>'+
-        '<div style="display:flex;flex-direction:column;gap:8px">'+
-          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
-            '<span style="color:#888">Version</span><span style="font-weight:700">v1.2</span>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
-            '<span style="color:#888">Projets actifs</span><span style="font-weight:700">'+projects.filter(function(p){return !p._archived;}).length+'</span>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
-            '<span style="color:#888">Notes clients</span><span style="font-weight:700">'+notesData.notes.length+'</span>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)">'+
-            '<span style="color:#888">Devis</span><span style="font-weight:700">'+devisData.devis.length+'</span>'+
-          '</div>'+
-          '<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0">'+
-            '<span style="color:#888">Supabase</span><span style="font-weight:700;font-family:IBM Plex Mono,monospace;font-size:11px;color:#888">lrloencnawphkoctmgec</span>'+
-          '</div>'+
+        '<div style="flex-shrink:0;width:260px;position:sticky;top:16px;display:flex;flex-direction:column;gap:10px">'+
+          tdBuildCalendar()+
+          tdBuildStatsEmployes()+
         '</div>'+
       '</div>'+
-
     '</div>';
 }
 
@@ -4579,6 +4362,152 @@ async function aideEnvoyer(){
     if(loadEl) loadEl.outerHTML = '<div style="background:#fff5f5;border-radius:8px;padding:10px 14px;font-size:12px;color:#dc2626;max-width:85%">Erreur de connexion. Vérifiez votre connexion internet.</div>';
   }
   msgs.scrollTop = msgs.scrollHeight;
+}
+
+
+var tdCalState = { mois: new Date().getMonth(), annee: new Date().getFullYear(), open: false };
+
+function tdBuildCalendar(){
+  var mois = tdCalState.mois;
+  var annee = tdCalState.annee;
+  var todayStr = new Date().toISOString().slice(0,10);
+  var MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var JOURS = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+
+  var taskCounts = {};
+  todoData.taches.forEach(function(t){
+    if(t.dateLimit && !t.done) taskCounts[t.dateLimit]=(taskCounts[t.dateLimit]||0)+1;
+  });
+
+  var activeDates = tdGetWeekDates();
+  var activeSet = {};
+  activeDates.forEach(function(d){ activeSet[d]=true; });
+
+  // Premier jour du mois (0=dim, 1=lun...)
+  var firstDay = new Date(annee, mois, 1).getDay();
+  var totalDays = new Date(annee, mois+1, 0).getDate();
+
+  // Header jours — Dim en vert, reste en noir (style image)
+  var headCells = JOURS.map(function(j,i){
+    var isDim = i===0;
+    return '<div style="text-align:center;padding:6px 2px">'+
+      '<span style="font-size:8px;font-weight:800;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px;'+
+        'background:'+(isDim?'#a3d977':'#1a1a1a')+';color:#fff;border-radius:6px;padding:3px 6px;white-space:nowrap">'+j+'</span>'+
+    '</div>';
+  }).join('');
+
+  // Cellules
+  var cells = '';
+  for(var i=0; i<firstDay; i++) cells += '<div></div>';
+
+  for(var d=1; d<=totalDays; d++){
+    var ds = annee+'-'+String(mois+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday = ds===todayStr;
+    var isActive = activeSet[ds];
+    var count = taskCounts[ds]||0;
+    var dow = new Date(annee,mois,d).getDay();
+    var isWeekend = dow===0||dow===6;
+
+    cells += '<div onclick="tdGoToDate(\''+ds+'\');" style="text-align:center;padding:4px 2px;cursor:pointer;position:relative;border-radius:6px;'+(isActive&&!isToday?'background:rgba(212,43,43,.06)':'')+'">'+ 
+      '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:13px;font-weight:800;font-family:Barlow Condensed,sans-serif;'+
+        'background:'+(isToday?'#d42b2b':'transparent')+';'+
+        'color:'+(isToday?'#fff':isActive?'#d42b2b':isWeekend?'#a3d977':'#1a1a1a')+';'+
+        (isActive&&!isToday?'font-weight:900;text-decoration:underline;text-decoration-color:#d42b2b;':'')+'">'+d+'</span>'+
+      (count>0?'<span style="position:absolute;top:2px;right:4px;background:#d42b2b;color:#fff;border-radius:8px;font-size:7px;font-weight:800;padding:0 4px;line-height:1.6">'+count+'</span>':'')+
+    '</div>';
+  }
+
+  return '<div style="background:#fff;border-radius:10px;padding:10px 12px;max-width:280px;margin:0 auto">'+
+    // Mois header
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+      '<button onclick="tdCalPrev()" style="background:transparent;border:1px solid #e8e8e8;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:14px;font-weight:700;color:#888;font-family:Barlow,sans-serif">‹</button>'+
+      '<div style="font-size:12px;font-weight:900;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#1a1a1a">'+MOIS[mois]+' '+annee+'</div>'+
+      '<button onclick="tdCalNext()" style="background:transparent;border:1px solid #e8e8e8;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:14px;font-weight:700;color:#888;font-family:Barlow,sans-serif">›</button>'+
+    '</div>'+
+    // Grille
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">'+headCells+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">'+cells+'</div>'+
+  '</div>';
+}
+
+function tdCalPrev(){
+  tdCalState.mois--;
+  if(tdCalState.mois<0){ tdCalState.mois=11; tdCalState.annee--; }
+  renderTodo();
+}
+function tdCalNext(){
+  tdCalState.mois++;
+  if(tdCalState.mois>11){ tdCalState.mois=0; tdCalState.annee++; }
+  renderTodo();
+}
+function tdGoToDate(dateStr){
+  var d = new Date(dateStr);
+  var today = new Date();
+  var mondayToday = new Date(today);
+  mondayToday.setDate(today.getDate() - (today.getDay()===0?6:today.getDay()-1));
+  mondayToday.setHours(0,0,0,0);
+  var mondayTarget = new Date(d);
+  mondayTarget.setDate(d.getDate() - (d.getDay()===0?6:d.getDay()-1));
+  mondayTarget.setHours(0,0,0,0);
+  var diffWeeks = Math.round((mondayTarget-mondayToday)/(7*24*3600*1000));
+  todoState.semaineOffset = diffWeeks;
+  todoState.collapsed = {};
+  tdCalState.open = false;
+  renderTodo();
+  // Scroll to the right day
+  setTimeout(function(){
+    var dow = d.getDay()===0?6:d.getDay()-1;
+    var blocks = document.querySelectorAll('[data-ji]');
+    if(blocks[dow]) blocks[dow].scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
+}
+
+
+function tdBuildStatsEmployes(){
+  var RESPS = ['Patrice','Francis','Molka','Natalia','Marie-Eve Graton','Marie-Eve Boucher','Charles-Eric'];
+  var RESP_LABELS = ['Patrice','Francis','Molka','Natalia','Marie-Ève Graton','Marie-Ève Boucher','Charles-Éric'];
+  var dates = tdGetWeekDates();
+  var counts = {};
+  RESP_LABELS.forEach(function(r){ counts[r]={total:0,done:0,urgent:0}; });
+
+  todoData.taches.forEach(function(t){
+    var off = (t.semaineOffset===undefined||t.semaineOffset===null)?0:t.semaineOffset;
+    var inWeek = t.dateLimit ? dates.indexOf(t.dateLimit)>-1 : off===(todoState.semaineOffset||0);
+    if(!inWeek) return;
+    var r = t.responsable;
+    if(r && counts[r]){
+      counts[r].total++;
+      if(t.done) counts[r].done++;
+      if(!t.done && t.priorite==='haute') counts[r].urgent++;
+    }
+  });
+
+  var rows = RESP_LABELS.filter(function(r){ return counts[r].total>0; }).map(function(r){
+    var c = counts[r];
+    var pct = c.total>0?Math.round(c.done/c.total*100):0;
+    var parts = r.split(' ');
+    var initials = (parts[0][0]+(parts[parts.length-1][0]||'')).toUpperCase();
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5">'+
+      '<div style="width:28px;height:28px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;flex-shrink:0">'+initials+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:11px;font-weight:700;color:#1a1a1a;font-family:Barlow,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r+'</div>'+
+        '<div style="height:4px;background:#f0f0f0;border-radius:2px;margin-top:3px">'+
+          '<div style="height:4px;background:#16a34a;border-radius:2px;width:'+pct+'%"></div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:11px;font-weight:800;color:#1a1a1a">'+(c.total-c.done)+'<span style="color:#bbb;font-weight:400;font-size:9px"> / '+c.total+'</span></div>'+
+        (c.urgent>0?'<div style="font-size:8px;color:#d42b2b;font-weight:700">'+c.urgent+' ⚠</div>':'<div style="font-size:8px;color:#16a34a">'+pct+'%</div>')+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  if(!rows) return '';
+
+  return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px 14px">'+
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:8px">👥 Cette semaine</div>'+
+    rows+
+  '</div>';
 }
 
 </script>
