@@ -4022,7 +4022,13 @@ function renderTodo(){
     var rows = TODO_JOURS_KEYS.map(function(jk,ji){
       var date = dates[ji];
       var isToday = date===today;
-      var tachesJour = todoData.taches.filter(function(t){ return t.dateLimit===date || (!t.dateLimit && (t.semaineOffset||0)===(todoState.semaineOffset||0) && t.jourIdx===ji); });
+      var tachesJour = todoData.taches.filter(function(t){
+        if(t.dateLimit) return t.dateLimit===date;
+        // Sans date : afficher selon semaineOffset ET jourIdx
+        // Si pas de semaineOffset défini (anciennes tâches) → afficher sur semaine courante
+        var tOffset = (t.semaineOffset===undefined||t.semaineOffset===null) ? 0 : t.semaineOffset;
+        return tOffset===(todoState.semaineOffset||0) && t.jourIdx===ji;
+      });
       tachesJour.sort(function(a,b){ if(a.done!==b.done) return a.done?1:-1; var o={haute:0,normale:1,basse:2}; return (o[a.priorite]||1)-(o[b.priorite]||1); });
       var doneJ = tachesJour.filter(function(t){return t.done;}).length;
       var hasLeft = tachesJour.filter(function(t){return !t.done;}).length;
