@@ -2651,7 +2651,7 @@ function renderHebdo(){
       '</div>'+
 
       // ── OBJECTIFS ──
-      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;overflow:hidden;margin-bottom:20px">'+
+      '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;margin-bottom:20px">'+
         '<div style="background:var(--red);padding:12px 18px;display:flex;align-items:center;justify-content:space-between">'+
           '<div style="display:flex;align-items:center;gap:10px">'+
             '<span style="font-size:13px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fff">🎯 Priorités de la semaine</span>'+
@@ -2659,7 +2659,7 @@ function renderHebdo(){
           '</div>'+
           '<button onclick="hbObjAdd(\''+wk+'\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:5px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:700;font-family:Barlow,sans-serif">+ Ajouter</button>'+
         '</div>'+
-        '<div style="padding:12px 18px">'+(objRows||'<div style="color:#bbb;font-size:12px;padding:8px 0">Aucune priorité — cliquez sur + Ajouter</div>')+'</div>'+
+        '<div style="padding:12px 18px;min-height:80px">'+(objRows||'<div style="color:#bbb;font-size:12px;padding:8px 0">Aucune priorité — cliquez sur + Ajouter</div>')+'</div>'+
       '</div>'+
 
       // ── STANDUP ÉQUIPE ──
