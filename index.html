@@ -4510,6 +4510,141 @@ function tdBuildStatsEmployes(){
   '</div>';
 }
 
+
+// ══════════════════════════════════════════════════════════
+//  SUPABASE — SYNCHRONISATION DONNÉES
+// ══════════════════════════════════════════════════════════
+var SB_URL = 'https://lrloencnawphkoctmgec.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxybG9lbmNuYXdwaGtvY3RtZ2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjg0MjUsImV4cCI6MjA5MjcwNDQyNX0.9Pw0_PP8hmkvHpi2UUL-HGgxlD2PKsMpgi49NETZJG0';
+var SB_WK  = 'adux-molkaadux';
+
+var sbSyncing = false;
+var sbLastSync = null;
+
+function sbHeaders(){
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Prefer': 'return=minimal'
+  };
+}
+
+function sbLoad(){
+  var indicator = document.getElementById('sb-status');
+  if(indicator) indicator.textContent = '⏳ Synchro...';
+  fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
+    headers: sbHeaders()
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if(!rows || !rows.length || !rows[0].data){
+      sbSave();
+      return;
+    }
+    var d = rows[0].data;
+    if(d.projects && d.projects.length) projects = d.projects;
+    if(d.states)    Object.assign(states,    d.states);
+    if(d.bhData)    Object.assign(bhData,    d.bhData);
+    if(d.bhClients) Object.assign(bhClients, d.bhClients);
+    if(d.trData){
+      var sbClients = (d.trData.clients||[]).length;
+      var codeClients = trData.clients.length;
+      if(sbClients >= codeClients){
+        trData = d.trData;
+      } else {
+        if(d.trData.clients) d.trData.clients.forEach(function(sc){
+          var found = trData.clients.find(function(c){return c.nom===sc.nom||c.id===sc.id;});
+          if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.services=sc.services||found.services; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; found.budgetP=sc.budgetP||found.budgetP; found.respP=sc.respP||found.respP; }
+        });
+        trData.annee = d.trData.annee || trData.annee;
+        trData.moisActif = d.trData.moisActif !== undefined ? d.trData.moisActif : trData.moisActif;
+      }
+      trMigrateMultiPlat();
+    }
+    if(d.pmData)    pmData    = d.pmData;
+    if(d.ftData)    ftData    = d.ftData;
+    if(d.hebdoData) Object.assign(hebdoData, d.hebdoData);
+    if(d.notesData) notesData = d.notesData;
+    if(d.todoData)  todoData  = d.todoData;
+    sbLastSync = new Date();
+    if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+    renderProjects();
+    updateNotifBadge();
+    updateCtxBar();
+    console.log('Supabase: données chargées');
+  })
+  .catch(function(e){
+    if(indicator) indicator.textContent = '⚠ Hors ligne';
+    console.warn('Supabase offline:', e);
+  });
+}
+
+function sbSave(){
+  if(sbSyncing) return;
+  sbSyncing = true;
+  var indicator = document.getElementById('sb-status');
+  if(indicator) indicator.textContent = '💾 Sauvegarde...';
+  var payload = {
+    workspace_key: SB_WK,
+    data: {
+      projects:  projects,
+      states:    states,
+      bhData:    bhData,
+      bhClients: bhClients,
+      trData:    trData,
+      pmData:    pmData,
+      ftData:    ftData,
+      hebdoData: hebdoData,
+      notesData: notesData,
+      todoData:  todoData,
+    },
+    updated_at: new Date().toISOString()
+  };
+  var saveHeaders = sbHeaders();
+  saveHeaders['Prefer'] = 'resolution=merge-duplicates';
+  fetch(SB_URL + '/rest/v1/adux_data', {
+    method: 'POST',
+    headers: saveHeaders,
+    body: JSON.stringify(payload)
+  })
+  .then(function(){
+    sbSyncing = false;
+    sbLastSync = new Date();
+    if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+  })
+  .catch(function(e){
+    sbSyncing = false;
+    if(indicator) indicator.textContent = '⚠ Erreur synchro';
+    console.warn('Supabase save error:', e);
+  });
+}
+
+function sbRefresh(){ sbLoad(); }
+
+// Sync automatique toutes les 30 secondes
+setInterval(sbRefresh, 30000);
+
+// Patch toutes les fonctions save
+var _sbSaveDebounce = null;
+function sbSaveDebounced(){
+  clearTimeout(_sbSaveDebounce);
+  _sbSaveDebounce = setTimeout(sbSave, 1500);
+}
+
+var _origSaveProjects = saveProjects; saveProjects = function(){ _origSaveProjects(); sbSaveDebounced(); };
+var _origSaveBH = saveBH;             saveBH       = function(){ _origSaveBH();       sbSaveDebounced(); };
+var _origSaveBHC = saveBHC;           saveBHC      = function(){ _origSaveBHC();      sbSaveDebounced(); };
+var _origSaveTR = saveTR;             saveTR       = function(){ _origSaveTR();       sbSaveDebounced(); };
+var _origSavePM = savePM;             savePM       = function(){ _origSavePM();       sbSaveDebounced(); };
+var _origSaveFT = saveFT;             saveFT       = function(){ _origSaveFT();       sbSaveDebounced(); };
+var _origSaveHebdo = saveHebdo;       saveHebdo    = function(){ _origSaveHebdo();    sbSaveDebounced(); };
+var _origSaveNotes = saveNotes;       saveNotes    = function(){ _origSaveNotes();    sbSaveDebounced(); };
+var _origSaveTodo = saveTodo;         saveTodo     = function(){ _origSaveTodo();     sbSaveDebounced(); };
+
+// Lancer la synchro au démarrage
+window.addEventListener('load', function(){ setTimeout(sbLoad, 800); });
+
 </script>
 </body>
 </html>
