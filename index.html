@@ -2489,7 +2489,22 @@ function buildHistorique(){
   '<div style="max-width:900px;margin:32px auto;padding:0 40px"><div class="tw"><table><thead><tr><th>Module</th><th>Tâche</th><th>Date</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 
-var hebdoData = {};
+var hebdoData = {
+  '2026-04-27': {
+    objectifs:[
+      {txt:'Lancer C Ville Marie Jeudi en PM',done:false},
+      {txt:'Visuels Habitation JL – Suivi Marie Eve Graton',done:false},
+      {txt:'PATRICE : Vérifier le budget alloué à la location des installations.',done:false},
+      {txt:'Acces Samuya illumin au GTM VILLE DE LEVIS – encours avec patrice',done:false}
+    ],
+    standups:[
+      {nom:'Patrice',fait:'Client: GIANT\nValider avec Chuck et caro la situation du client',encours:'Patrice va valider avec le client si sont contrat lui donne le droit de prendre les images de son site Giant ou pas.',bloquants:''},
+      {nom:'Molka',fait:'Client: Station D\nPrésentation du plan',encours:'Validation du budget',bloquants:"J'attends le retour de la cliente"},
+      {nom:'Patrice',fait:"Contacter Élise pour lui demander l'accès pour Illumin",encours:"Élise doit contacter l'autre agence pour obtenir l'accès",bloquants:"Nous n'avons pas accès administrateur au GTM"}
+    ],
+    clientsNote:[]
+  }
+};
 try { var _hbd=localStorage.getItem('adux_hebdo'); if(_hbd) hebdoData=JSON.parse(_hbd); } catch(e){}
 function saveHebdo(){ try{localStorage.setItem('adux_hebdo',JSON.stringify(hebdoData));}catch(e){} }
 
