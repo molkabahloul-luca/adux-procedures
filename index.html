@@ -961,7 +961,13 @@ function importData(input){
       if(d.trData) trData = d.trData;
       if(d.pmData) pmData = d.pmData;
       if(d.ftData) ftData = d.ftData;
-      if(d.hebdoData) Object.assign(hebdoData, d.hebdoData);
+      if(d.hebdoData){
+      // Fusionner: garder les données locales si Supabase est vide pour cette semaine
+      Object.keys(hebdoData).forEach(function(wk){
+        if(!d.hebdoData[wk]) d.hebdoData[wk] = hebdoData[wk];
+      });
+      Object.assign(hebdoData, d.hebdoData);
+    }
       saveProjects(); saveBH(); saveTR(); savePM(); saveFT(); saveHebdo();
       // Reset panel flags so modules rebuild
       ['onb','meta','goo','web','seo','contenu','bhproc','tracker','pm'].forEach(function(ns){ window['_'+ns]=false; });
