@@ -2543,7 +2543,7 @@ var hebdoData = {
   }
 };
 try { var _hbd=localStorage.getItem('adux_hebdo'); if(_hbd) hebdoData=JSON.parse(_hbd); } catch(e){}
-function saveHebdo(){ try{localStorage.setItem('adux_hebdo',JSON.stringify(hebdoData));}catch(e){} if(typeof sbSaveDebounced==='function') sbSaveDebounced(); }
+function saveHebdo(){ try{localStorage.setItem('adux_hebdo',JSON.stringify(hebdoData));}catch(e){} }
 
 var hebdoState = { semaine: ftWeekKey ? ftWeekKey(new Date()) : new Date().toISOString().slice(0,10), filtreResp: '' };
 
@@ -2573,7 +2573,7 @@ function buildHebdo(){
 function renderHebdo(){
   var p=document.getElementById('p-hebdo'); if(!p) return;
   var wk  = hebdoState.semaine;
-  var dat = hbGet(wk);
+  var dat = hbGet(wk); if(!dat){ dat = {objectifs:[],standups:[],clientsNote:[]}; }
 
   function ta(id, val, ph, h){
     return '<textarea id="'+id+'" onchange="hbSave()" '+
@@ -3967,7 +3967,7 @@ function toggleModule(i, ns){
 // ══════════════════════════════════════════
 var todoData = { taches: [] };
 try { var _td=localStorage.getItem('adux_todo'); if(_td) todoData=JSON.parse(_td); } catch(e){}
-function saveTodo(){ try{localStorage.setItem('adux_todo',JSON.stringify(todoData));}catch(e){} if(typeof sbSaveDebounced==='function') sbSaveDebounced(); }
+function saveTodo(){ try{localStorage.setItem('adux_todo',JSON.stringify(todoData));}catch(e){} }
 
 var TODO_PRIOS = {
   haute:   {label:'Haute',   color:'#dc2626', bg:'#fee2e2', emoji:'🔴'},
@@ -4707,6 +4707,7 @@ setInterval(sbRefresh, 30000);
 // Patch toutes les fonctions save
 var _sbSaveDebounce = null;
 function sbSaveDebounced(){
+  if(typeof sbSave !== 'function') return;
   clearTimeout(_sbSaveDebounce);
   _sbSaveDebounce = setTimeout(sbSave, 1500);
 }
