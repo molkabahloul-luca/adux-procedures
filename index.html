@@ -4578,24 +4578,31 @@ function sbHeaders(){
 function sbLoad(){
   var indicator = document.getElementById('sb-status');
   if(indicator) indicator.textContent = '⏳ Synchro...';
+
+  var localHebdo = JSON.parse(JSON.stringify(hebdoData));
+  var localTodo  = JSON.parse(JSON.stringify(todoData));
+  var localNotes = JSON.parse(JSON.stringify(notesData));
+
   fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
     headers: sbHeaders()
   })
   .then(function(r){ return r.json(); })
   .then(function(rows){
     if(!rows || !rows.length || !rows[0].data){
-      sbSave();
-      return;
+      sbSave(); return;
     }
     var d = rows[0].data;
+
     if(d.projects && d.projects.length) projects = d.projects;
     if(d.states)    Object.assign(states,    d.states);
     if(d.bhData)    Object.assign(bhData,    d.bhData);
     if(d.bhClients) Object.assign(bhClients, d.bhClients);
+    if(d.pmData)    pmData = d.pmData;
+    if(d.ftData)    ftData = d.ftData;
+
     if(d.trData){
       var sbClients = (d.trData.clients||[]).length;
-      var codeClients = trData.clients.length;
-      if(sbClients >= codeClients){
+      if(sbClients >= trData.clients.length){
         trData = d.trData;
       } else {
         if(d.trData.clients) d.trData.clients.forEach(function(sc){
@@ -4607,31 +4614,55 @@ function sbLoad(){
       }
       trMigrateMultiPlat();
     }
-    if(d.pmData)    pmData    = d.pmData;
-    if(d.ftData)    ftData    = d.ftData;
-    if(d.hebdoData) Object.assign(hebdoData, d.hebdoData);
-    if(d.notesData) notesData = d.notesData;
-    if(d.todoData){
-      // Garder les tâches locales si Supabase en a moins
-      var sbTaches = (d.todoData.taches||[]).length;
-      var localTaches = todoData.taches.length;
-      if(sbTaches >= localTaches){
-        todoData = d.todoData;
+
+    // Notes — prendre le plus grand
+    if(d.notesData){
+      var sbN = (d.notesData.notes||[]).length;
+      if(sbN >= (localNotes.notes||[]).length){
+        notesData = d.notesData;
       } else {
-        // Fusionner: ajouter les tâches Supabase qui n'existent pas localement
-        if(d.todoData.taches) d.todoData.taches.forEach(function(t){
-          if(!todoData.taches.find(function(lt){return lt.id===t.id;})){
-            todoData.taches.push(t);
-          }
+        (d.notesData.notes||[]).forEach(function(n){
+          if(!notesData.notes.find(function(ln){return ln.id===n.id;})) notesData.notes.push(n);
         });
       }
     }
+
+    // Hebdo — fusion semaine par semaine, jamais écraser
+    if(d.hebdoData){
+      Object.keys(d.hebdoData).forEach(function(wk){
+        var sbWk = d.hebdoData[wk];
+        var localWk = localHebdo[wk];
+        if(!localWk){
+          hebdoData[wk] = sbWk;
+        } else {
+          var sbTotal = (sbWk.objectifs||[]).length + (sbWk.standups||[]).length;
+          var locTotal = (localWk.objectifs||[]).length + (localWk.standups||[]).length;
+          if(sbTotal > locTotal) hebdoData[wk] = sbWk;
+        }
+      });
+      Object.keys(localHebdo).forEach(function(wk){
+        if(!d.hebdoData[wk]) hebdoData[wk] = localHebdo[wk];
+      });
+    }
+
+    // Todo — fusion par ID, jamais écraser
+    if(d.todoData && d.todoData.taches){
+      var merged = JSON.parse(JSON.stringify(localTodo.taches||[]));
+      (d.todoData.taches||[]).forEach(function(t){
+        var exists = merged.find(function(lt){return lt.id===t.id;});
+        if(!exists) merged.push(t);
+        else exists.done = t.done;
+      });
+      todoData.taches = merged;
+    }
+
     sbLastSync = new Date();
     if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+    sbSave();
     renderProjects();
     updateNotifBadge();
     updateCtxBar();
-    console.log('Supabase: données chargées');
+    console.log('Supabase: fusion OK');
   })
   .catch(function(e){
     if(indicator) indicator.textContent = '⚠ Hors ligne';
@@ -4639,45 +4670,6 @@ function sbLoad(){
   });
 }
 
-function sbSave(){
-  if(sbSyncing) return;
-  sbSyncing = true;
-  var indicator = document.getElementById('sb-status');
-  if(indicator) indicator.textContent = '💾 Sauvegarde...';
-  var payload = {
-    workspace_key: SB_WK,
-    data: {
-      projects:  projects,
-      states:    states,
-      bhData:    bhData,
-      bhClients: bhClients,
-      trData:    trData,
-      pmData:    pmData,
-      ftData:    ftData,
-      hebdoData: hebdoData,
-      notesData: notesData,
-      todoData:  todoData,
-    },
-    updated_at: new Date().toISOString()
-  };
-  var saveHeaders = sbHeaders();
-  saveHeaders['Prefer'] = 'resolution=merge-duplicates';
-  fetch(SB_URL + '/rest/v1/adux_data', {
-    method: 'POST',
-    headers: saveHeaders,
-    body: JSON.stringify(payload)
-  })
-  .then(function(){
-    sbSyncing = false;
-    sbLastSync = new Date();
-    if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-  })
-  .catch(function(e){
-    sbSyncing = false;
-    if(indicator) indicator.textContent = '⚠ Erreur synchro';
-    console.warn('Supabase save error:', e);
-  });
-}
 
 function sbRefresh(){ sbLoad(); }
 
