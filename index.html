@@ -716,14 +716,9 @@ function SP(id, btn) {
       if(panel2) panel2.innerHTML = buildNoProjectScreen(id);
       return;
     }
-    if (id==='onb'     && !window._onb)     { buildCL('onb',    ONB_DATA, ONB_ROLES); window._onb=true; }
-    if (id==='meta'    && !window._meta)    { buildCL('meta',   META_DATA, CL_ROLES); window._meta=true; }
-    if (id==='goo'     && !window._goo)     { buildCL('goo',    GOO_DATA,  CL_ROLES); window._goo=true; }
-    if (id==='web'     && !window._web)     { buildCL('web',    WEB_DATA,  WEB_ROLES); window._web=true; }
-    if (id==='seo'     && !window._seo)     { buildCL('seo',    SEO_DATA,  SEO_ROLES); window._seo=true; }
-    if (id==='contenu' && !window._contenu) { buildCL('contenu',CON_DATA,  CON_ROLES); window._contenu=true; }
-    if (id==='auditgoo' && !window._auditgoo) { buildCL('auditgoo',AUDIT_GOO_DATA, CL_ROLES); window._auditgoo=true; }
-    if (id==='bhproc'  && !window._bhproc)  { buildCL('bhproc', BHP_DATA,  BHP_ROLES); window._bhproc=true; }
+    var clDataMap = {onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA,auditgoo:AUDIT_GOO_DATA};
+    var clRoleMap  = {onb:ONB_ROLES,meta:CL_ROLES,goo:CL_ROLES,web:WEB_ROLES,seo:SEO_ROLES||CL_ROLES,contenu:CON_ROLES||CL_ROLES,bhproc:BHP_ROLES,auditgoo:CL_ROLES};
+    if(clDataMap[id]){ buildCL(id, clDataMap[id], clRoleMap[id]||CL_ROLES); }
   }
   if (id==='tracker' && !window._tr)        { buildTracker();   window._tr=true; }
   if (id==='feuilles')                      { buildFeuilles(); }
@@ -1052,11 +1047,7 @@ function buildCL(ns, data, roles){
       '<div class="prog-wrap"><div class="prog-track"><div class="prog-fill" id="'+ns+'-fill" style="background:'+c.color+'"></div></div>'+
       '<div class="prog-lbl" id="'+ns+'-lbl">items complétés · 0%</div></div>'+
     '</div></div></div>'+
-    '<div class="legend-bar"><span class="leg-lbl">Responsables</span>'+
-      '<span class="leg-pill" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.75)"><span class="leg-dot" style="background:rgba(255,255,255,.5)"></span>Chef de projet</span>'+
-      '<span class="leg-pill" style="background:rgba(255,180,80,.2);color:#FFD090"><span class="leg-dot" style="background:#f59e0b"></span>Gestionnaire</span>'+
-      '<span class="leg-pill" style="background:rgba(212,43,43,.3);color:#FF9090"><span class="leg-dot" style="background:var(--red)"></span>Client</span>'+
-    '</div>'+
+
     '<div class="main">'+
       '<div class="client-bar"><div class="client-accent" style="background:'+c.color+'"></div><label>Client</label><input type="text" placeholder="Nom du client…" value="'+(ctxProj?ctxProj.client:'')+'"></div>'+
       '<div class="sum-grid" id="'+ns+'-sgrid" style="display:none">'+
@@ -1122,9 +1113,7 @@ function renderSections(ns, data, roles){
         var rKeys=sec.items.map(function(it,i){return{it:it,i:i};}).filter(function(x){return !x.it.divider&&(x.it.r||['cdp'])[0]===pr;}).map(function(x){return ck(ns,sec.id,x.i);});
         var rDone=rKeys.filter(function(k){return !!getStates(ns)[k];}).length;
         var rComp=rDone===rKeys.length;
-        body+='<div class="role-block rb-'+pr+' '+(rComp?'done-b':'act-b')+'" id="'+ns+'-rb-'+sec.id+'-'+pr+'">'+
-          '<div class="role-hdr"><div class="role-dot" style="background:'+rm.dot+'"></div><span>'+rm.label+'</span>'+
-          '<span style="font-size:10px;color:#bbb;font-weight:400;text-transform:none;letter-spacing:0;margin-left:auto">'+rDone+'/'+rKeys.length+'</span></div><div>';
+        body+='<div class="role-block rb-'+pr+'" id="'+ns+'-rb-'+sec.id+'-'+pr+'"><div>';
         blockOpen=true; lastRole=pr;
       }
       var key=ck(ns,sec.id,idx); var checked=!!getStates(ns)[key];
@@ -1142,7 +1131,7 @@ function renderSections(ns, data, roles){
           '<label class="item-lbl '+(checked?'checked':'')+'" for="cb-'+key+'">'+item.l+tsel+'</label>'+
           '<div class="itime '+(checked?'used':'')+'" id="itime-'+key+'">'+(taskMin>0?(taskMin>=60?(taskMin/60)+' h':taskMin+' min')+(checked?' ✓':''):'')+'</div>'+
           '<div class="item-date '+(checked?'vis':'')+'" id="date-'+key+'">'+(getStates(ns)[key+'_date']||'')+'</div>'+
-          '<div class="item-pills">'+(item.r||[]).map(function(r){return roles[r]?'<span class="pill '+roles[r].cls+'">'+roles[r].label+'</span>':'';}).join('')+'</div>'+
+          '<div class="item-pills"></div>'+
           (item.w?'<div class="warn">⚠ '+item.w+'</div>':'')+
         '</div></div>';
     });
