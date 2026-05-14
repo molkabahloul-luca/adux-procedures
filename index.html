@@ -622,6 +622,7 @@ tfoot td.r{text-align:right}
         <label class="wiz-type"><input type="checkbox" value="bhproc"><span>🏦</span><div><div class="wiz-type-lbl">Banque d'heures</div><div class="wiz-type-desc">Procédure complète</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="meta"><span>📘</span><div><div class="wiz-type-lbl">Meta Ads</div><div class="wiz-type-desc">Facebook & Instagram</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="goo"><span>🔍</span><div><div class="wiz-type-lbl">Google Ads</div><div class="wiz-type-desc">Search, PMAX</div></div></label>
+        <label class="wiz-type"><input type="checkbox" value="auditgoo"><span>🔬</span><div><div class="wiz-type-lbl">Audit Google Ads</div><div class="wiz-type-desc">Analyse de compte existant</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="web"><span>🌐</span><div><div class="wiz-type-lbl">Site web</div><div class="wiz-type-desc">Conception & dev</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="seo"><span>📈</span><div><div class="wiz-type-lbl">SEO</div><div class="wiz-type-desc">Référencement</div></div></label>
         <label class="wiz-type"><input type="checkbox" value="contenu"><span>✍️</span><div><div class="wiz-type-lbl">Contenu</div><div class="wiz-type-desc">Rédaction</div></div></label>
@@ -651,6 +652,7 @@ tfoot td.r{text-align:right}
 <div class="panel" id="p-bhproc"></div>
 <div class="panel" id="p-meta"></div>
 <div class="panel" id="p-goo"></div>
+<div class="panel" id="p-auditgoo"></div>
 <div class="panel" id="p-web"></div>
 <div class="panel" id="p-seo"></div>
 <div class="panel" id="p-contenu"></div>
@@ -706,7 +708,7 @@ function SP(id, btn) {
   // Initialiser le module si nécessaire
   if (id==='home')                          { ctxProj=null; updateCtxBar(); renderHomeWithDashboard(); initWizard(); }
   // Checklists : bloquer sans projet actif
-  var CL_IDS = ['onb','bhproc','meta','goo','web','seo','contenu'];
+  var CL_IDS = ['onb','bhproc','meta','goo','auditgoo','web','seo','contenu'];
   if (CL_IDS.indexOf(id) > -1) {
     if (!ctxProj) {
       // Afficher écran de sélection de projet
@@ -720,6 +722,7 @@ function SP(id, btn) {
     if (id==='web'     && !window._web)     { buildCL('web',    WEB_DATA,  WEB_ROLES); window._web=true; }
     if (id==='seo'     && !window._seo)     { buildCL('seo',    SEO_DATA,  SEO_ROLES); window._seo=true; }
     if (id==='contenu' && !window._contenu) { buildCL('contenu',CON_DATA,  CON_ROLES); window._contenu=true; }
+    if (id==='auditgoo' && !window._auditgoo) { buildCL('auditgoo',AUDIT_GOO_DATA, CL_ROLES); window._auditgoo=true; }
     if (id==='bhproc'  && !window._bhproc)  { buildCL('bhproc', BHP_DATA,  BHP_ROLES); window._bhproc=true; }
   }
   if (id==='tracker' && !window._tr)        { buildTracker();   window._tr=true; }
@@ -1168,7 +1171,7 @@ function chk(ns,sid,idx,val){
   if(taskMin>0){bh.usedMin=(bh.usedMin||0)+(val?taskMin:-taskMin);saveBH();renderBHBar(ns);}
   var itEl=document.getElementById('itime-'+key);
   if(itEl&&taskMin>0){itEl.textContent=(taskMin>=60?(taskMin/60)+' h':taskMin+' min')+(val?' ✓':'');itEl.className='itime'+(val?' used':'');}
-  var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
+  var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,auditgoo:AUDIT_GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
   var data=dataMap[ns]; if(!data) return;
   var sec=data.find(function(s){return s.id===sid;}); if(!sec) return;
   var real=realItems(sec); var done=doneCount(ns,sec); var complete=done===real.length;
@@ -1205,8 +1208,8 @@ function showToast(msg, color){
   t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},3200);
 }
 
-var CL_LABELS_MAP = {onb:'Onboarding',bhproc:"Banque d'heures",meta:'Meta Ads',goo:'Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu'};
-var CL_ICONS_MAP  = {onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',web:'🌐',seo:'📈',contenu:'✍️'};
+var CL_LABELS_MAP = {onb:'Onboarding',bhproc:"Banque d'heures",meta:'Meta Ads',goo:'Google Ads',auditgoo:'Audit Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu'};
+var CL_ICONS_MAP  = {onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',auditgoo:'🔬',web:'🌐',seo:'📈',contenu:'✍️'};
 
 function updateCtxBar(){
   var bar = document.getElementById('ctx-proj-bar');
@@ -1323,116 +1326,332 @@ var ONB_DATA = [
 ];
 
 var META_DATA = [
-  {id:'meta1',icon:'📘',title:'Configuration du compte',sub:'Mise en place Meta Business',time:'2 h',items:[
-    {l:'Business Manager créé ou accès reçu',r:['cdp']},
-    {l:'Pixel installé et vérifié',r:['dev','cdp']},
-    {l:'Compte publicitaire configuré',r:['cdp']},
-    {l:'Mode de paiement ajouté',r:['client']},
-    {l:'Événements de conversion testés',r:['dev']},
+  {id:'meta1',icon:'🔑',title:'Accès & configuration du compte',sub:'Mise en place initiale',time:'1 h',items:[
+    {l:'Business Manager créé ou accès reçu',r:['cdp','client']},
+    {l:'Compte publicitaire lié à ADUX',r:['cdp']},
+    {l:'Pixel Meta installé via GTM',r:['dev','cdp']},
+    {l:'Mode de paiement ajouté et vérifié',r:['client']},
+    {l:'Limites de dépenses configurées',r:['cdp']},
+    {l:'Rôles et permissions vérifiés',r:['cdp']},
   ]},
-  {id:'meta2',icon:'🎯',title:'Stratégie & audiences',sub:'Définir ciblages et objectifs',time:'2 h',items:[
-    {l:'Objectif de campagne défini',r:['strat','cdp']},
-    {l:'Audiences personnalisées créées',r:['cdp']},
-    {l:'Audiences similaires générées',r:['cdp']},
-    {l:'Ciblages d\'intérêts configurés',r:['cdp']},
-    {l:'Exclusions d\'audiences définies',r:['cdp']},
+  {id:'meta2',icon:'📊',title:'Pixel & événements',sub:'Tracking et conversions',time:'2 h',items:[
+    {l:'Pixel vérifié — statut actif',r:['dev','cdp']},
+    {l:'Événement ViewContent configuré',r:['dev']},
+    {l:'Événement Lead / CompleteRegistration configuré',r:['dev']},
+    {l:'Événement Purchase configuré (si e-commerce)',r:['dev']},
+    {l:'Test des événements via Meta Pixel Helper',r:['dev','cdp']},
+    {l:'API Conversions configurée (si possible)',r:['dev']},
   ]},
-  {id:'meta3',icon:'🖼',title:'Créatifs & visuels',sub:'Préparer les annonces',time:'3 h',items:[
-    {l:'Visuels aux formats requis livrés',r:['design']},
-    {l:'Vidéos exportées (formats corrects)',r:['design']},
-    {l:'Textes d\'annonces rédigés',r:['strat']},
-    {l:'Copies approuvées par le client',r:['client']},
-    {l:'Annonces créées dans Ads Manager',r:['cdp']},
+  {id:'meta3',icon:'🛍',title:'Catalogue & assets',sub:'Ressources visuelles',time:'2 h',items:[
+    {l:'Catalogue produits créé (si e-commerce)',r:['cdp']},
+    {l:'Flux de produits vérifié',r:['cdp']},
+    {l:'Visuels 1080x1080 reçus',r:['design']},
+    {l:'Visuels 1080x1920 Stories/Reels reçus',r:['design']},
+    {l:'Vidéos exportées aux bons formats',r:['design']},
+    {l:'Textes d\'annonces rédigés et approuvés',r:['strat','client']},
   ]},
-  {id:'meta4',icon:'🚀',title:'Lancement & suivi',sub:'Mise en ligne et monitoring',time:'1 h',items:[
-    {l:'Campagnes mises en ligne',r:['cdp']},
-    {l:'Rapport de lancement envoyé',r:['gc']},
-    {l:'Alertes budgétaires configurées',r:['cdp']},
-    {l:'Première optimisation planifiée (J+3)',r:['cdp']},
+  {id:'meta4',icon:'👥',title:'Audiences',sub:'Ciblages et segmentation',time:'2 h',items:[
+    {l:'Audience personnalisée — visiteurs site 30j',r:['cdp']},
+    {l:'Audience personnalisée — visiteurs site 60j',r:['cdp']},
+    {l:'Audience personnalisée — visiteurs site 90j',r:['cdp']},
+    {l:'Audience personnalisée — liste clients importée',r:['cdp']},
+    {l:'Audiences similaires générées (1%, 2%, 5%)',r:['cdp']},
+    {l:'Ciblages d\'intérêts configurés',r:['strat','cdp']},
+    {l:'Exclusions — clients existants, employés',r:['cdp']},
+  ]},
+  {id:'meta5',icon:'⚙️',title:'Structure des campagnes',sub:'Organisation et paramètres',time:'1 h',items:[
+    {l:'Objectif défini (leads, trafic, conversion, notoriété)',r:['strat','cdp']},
+    {l:'Structure campagne / ensemble / annonce validée',r:['strat']},
+    {l:'Budget défini (CBO ou ABO)',r:['strat','cdp','client']},
+    {l:'Calendrier de diffusion configuré',r:['cdp']},
+    {l:'Placements définis (automatiques ou manuels)',r:['cdp']},
+    {l:'Pixel sélectionné dans chaque ensemble',r:['cdp']},
+  ]},
+  {id:'meta6',icon:'🎨',title:'Création des annonces',sub:'Formats et contenus',time:'3 h',items:[
+    {l:'Min. 3 formats par ensemble (image, vidéo, carrousel)',r:['cdp','design']},
+    {l:'Texte principal rédigé (max 125 caractères)',r:['strat']},
+    {l:'Titre accrocheur rédigé',r:['strat']},
+    {l:'Description ajoutée',r:['strat']},
+    {l:'CTA choisi (En savoir plus, Acheter, Nous contacter...)',r:['strat','cdp']},
+    {l:'Page de destination vérifiée et cohérente',r:['cdp']},
+    {l:'Approbation client reçue',r:['cdp','client']},
+  ]},
+  {id:'meta7',icon:'🚀',title:'Lancement & monitoring',sub:'Mise en ligne et suivi',time:'1 h',items:[
+    {l:'Annonces soumises — aucun refus de Meta',r:['cdp']},
+    {l:'Période d\'apprentissage surveillée',r:['cdp']},
+    {l:'Rapport de lancement envoyé au client',r:['gc']},
+    {l:'Alertes budget configurées',r:['cdp']},
+    {l:'Première optimisation planifiée J+3',r:['cdp']},
+    {l:'Dashboard Looker Studio partagé avec le client',r:['gc']},
+    {l:'Réunion bilan J+30 planifiée',r:['gc','client']},
   ]},
 ];
 
 var GOO_DATA = [
-  {id:'goo1',icon:'🔍',title:'Configuration Google Ads',sub:'Mise en place du compte',time:'2 h',items:[
-    {l:'Compte Google Ads lié au MCC',r:['cdp']},
-    {l:'Balise Google Ads installée',r:['dev']},
-    {l:'Conversions importées depuis GA4',r:['cdp']},
-    {l:'Extensions d\'annonces configurées',r:['cdp']},
+  {id:'goo1',icon:'🔑',title:'Accès & configuration du compte',sub:'Mise en place initiale',time:'1 h',items:[
+    {l:'Compte Google Ads lié au MCC ADUX',r:['cdp']},
+    {l:'Accès admin confirmé (invitation envoyée et acceptée)',r:['cdp','client']},
+    {l:'Nom du compte = nom du client',r:['cdp']},
+    {l:'Fuseau horaire : Amérique/Toronto',r:['cdp']},
+    {l:'Devise : CAD',r:['cdp']},
+    {l:'Mode de paiement ajouté et vérifié',r:['client']},
+    {l:'Notifications de compte configurées',r:['cdp']},
   ]},
-  {id:'goo2',icon:'📝',title:'Mots-clés & annonces',sub:'Recherche et rédaction',time:'3 h',items:[
-    {l:'Recherche de mots-clés complétée',r:['strat','cdp']},
-    {l:'Groupes d\'annonces structurés',r:['cdp']},
-    {l:'Annonces RSA rédigées (min. 3)',r:['strat']},
-    {l:'Mots-clés négatifs ajoutés',r:['cdp']},
+  {id:'goo2',icon:'📊',title:'Suivi & conversions',sub:'Tracking et audiences',time:'2 h',items:[
+    {l:'Balise Google Ads installée via GTM',r:['dev','cdp']},
+    {l:'Conversion : soumission de formulaire',r:['dev']},
+    {l:'Conversion : appel téléphonique (si applicable)',r:['dev']},
+    {l:'Conversion : achat (si e-commerce)',r:['dev']},
+    {l:'Importation des conversions GA4',r:['cdp']},
+    {l:'Test des conversions — statut "Enregistrement de données"',r:['dev','cdp']},
+    {l:'Audience remarketing — tous visiteurs 30j',r:['cdp']},
+    {l:'Audience remarketing — tous visiteurs 90j',r:['cdp']},
+    {l:'Audience remarketing — tous visiteurs 180j',r:['cdp']},
+    {l:'Audience liste clients importée (si disponible)',r:['cdp']},
+    {l:'Google Merchant Center lié (si e-commerce)',r:['cdp']},
   ]},
-  {id:'goo3',icon:'🚀',title:'Lancement',sub:'Mise en ligne et vérification',time:'1 h',items:[
-    {l:'Budget quotidien confirmé',r:['dir','client']},
-    {l:'Campagnes approuvées et actives',r:['cdp']},
-    {l:'Rapport J+7 planifié',r:['gc']},
+  {id:'goo3',icon:'🔎',title:'Recherche & structure',sub:'Mots-clés et organisation',time:'3 h',items:[
+    {l:'Recherche de mots-clés avec Keyword Planner',r:['strat','cdp']},
+    {l:'Mots-clés par intention — achat, comparaison, information',r:['strat']},
+    {l:'Volumes et CPC estimés validés avec le client',r:['cdp','client']},
+    {l:'Structure des campagnes approuvée (1 campagne par objectif)',r:['strat','cdp']},
+    {l:'Groupes d\'annonces — max 10-15 mots-clés par groupe',r:['cdp']},
+    {l:'Types de correspondance définis (expression exacte + large)',r:['cdp']},
+    {l:'Liste noire mots-clés négatifs — concurrents, emplois, gratuit, DIY',r:['cdp']},
+    {l:'Liste partagée de négatifs appliquée au compte',r:['cdp']},
+  ]},
+  {id:'goo4',icon:'✍️',title:'Création des annonces',sub:'Rédaction et visuels',time:'3 h',items:[
+    {l:'Min. 3 annonces RSA par groupe d\'annonces',r:['strat','cdp']},
+    {l:'15 titres rédigés par annonce (min. 5 uniques par groupe)',r:['strat']},
+    {l:'4 descriptions rédigées par annonce',r:['strat']},
+    {l:'Mots-clés intégrés dans les titres',r:['strat']},
+    {l:'URL finale vérifiée (page de destination pertinente)',r:['cdp']},
+    {l:'Chemin d\'affichage optimisé (ex: /services/toitures)',r:['cdp']},
+    {l:'Extension liens annexes — min. 4 liens',r:['cdp']},
+    {l:'Extension accroches — min. 4 textes',r:['cdp']},
+    {l:'Extension extrait de site — min. 2 catégories',r:['cdp']},
+    {l:'Extension numéro de téléphone configurée',r:['cdp']},
+    {l:'Extension lieu configurée (si local)',r:['cdp']},
+    {l:'Approbation client reçue par écrit',r:['cdp','client']},
+  ]},
+  {id:'goo5',icon:'⚙️',title:'Paramètres de campagne',sub:'Configuration finale',time:'1 h',items:[
+    {l:'Objectif défini (leads, ventes, trafic)',r:['strat','cdp']},
+    {l:'Réseau de recherche seulement (Display décoché)',r:['cdp']},
+    {l:'Zones géo — ville, région ou rayon km précis',r:['cdp','client']},
+    {l:'Langue : Français + Anglais',r:['cdp']},
+    {l:'Budget quotidien confirmé avec le client',r:['cdp','client']},
+    {l:'Stratégie d\'enchères — CPC manuel (départ) ou Max conversions',r:['strat','cdp']},
+    {l:'Limite d\'enchère CPC max définie',r:['cdp']},
+    {l:'Rotation des annonces — optimisée',r:['cdp']},
+  ]},
+  {id:'goo6',icon:'🚀',title:'Lancement & monitoring',sub:'Mise en ligne et suivi',time:'1 h',items:[
+    {l:'Campagnes soumises — statut "Éligible"',r:['cdp']},
+    {l:'Vérification approbation des annonces (aucun refus)',r:['cdp']},
+    {l:'Rapport de lancement envoyé au client',r:['gc']},
+    {l:'Alerte budget 80% configurée',r:['cdp']},
+    {l:'Alerte baisse CTR configurée',r:['cdp']},
+    {l:'Dashboard Looker Studio partagé avec le client',r:['gc']},
+    {l:'Première optimisation planifiée J+7',r:['cdp']},
+    {l:'Réunion bilan J+30 planifiée',r:['gc','client']},
+  ]},
+];
+
+
+var AUDIT_GOO_DATA = [
+  {id:'ag1',icon:'🔑',title:'Accès & configuration',sub:'Vérification initiale',time:'30 min',items:[
+    {l:'Accès au compte Google Ads obtenu (niveau admin)',r:['cdp']},
+    {l:'Accès Google Analytics GA4 obtenu',r:['cdp']},
+    {l:'Accès Google Tag Manager obtenu',r:['cdp']},
+    {l:'Historique du compte documenté (date création, dépenses totales)',r:['cdp']},
+    {l:'Fuseau horaire et devise vérifiés (CAD / Amérique Toronto)',r:['cdp']},
+  ]},
+  {id:'ag2',icon:'📊',title:'Suivi des conversions',sub:'Vérification du tracking',time:'1 h',items:[
+    {l:'Balise Google Ads présente et active',r:['dev','cdp']},
+    {l:'Conversions principales définies et actives',r:['cdp']},
+    {l:'Pas de doublons de conversions',r:['cdp']},
+    {l:'Conversions importées depuis GA4 vérifiées',r:['cdp']},
+    {l:'Test de conversion effectué (formulaire, achat, appel)',r:['dev','cdp']},
+    {l:'Valeur de conversion configurée (si applicable)',r:['cdp']},
+    {l:'Remarketing — audiences créées et populées',r:['cdp']},
+  ]},
+  {id:'ag3',icon:'🏗',title:'Structure des campagnes',sub:'Organisation et logique',time:'1 h',items:[
+    {l:'Campagnes organisées par objectif ou produit/service',r:['cdp']},
+    {l:'Noms de campagnes clairs et cohérents',r:['cdp']},
+    {l:'Réseau Display désactivé dans les campagnes Search',r:['cdp']},
+    {l:'Zones géographiques correctement configurées',r:['cdp']},
+    {l:'Budgets quotidiens réalistes par rapport aux enchères',r:['cdp']},
+    {l:'Groupes d\'annonces — max 15 mots-clés par groupe',r:['cdp']},
+    {l:'Thématiques des groupes d\'annonces bien séparées',r:['cdp']},
+  ]},
+  {id:'ag4',icon:'🔎',title:'Mots-clés',sub:'Pertinence et performance',time:'1 h',items:[
+    {l:'Types de correspondance appropriés (expression/exacte)',r:['cdp']},
+    {l:'Mots-clés trop larges identifiés et corrigés',r:['cdp']},
+    {l:'Score de qualité moyen vérifié (objectif 7+)',r:['cdp']},
+    {l:'Mots-clés avec CTR < 1% identifiés',r:['cdp']},
+    {l:'Mots-clés sans impression depuis 30j suspendus',r:['cdp']},
+    {l:'Rapport de requêtes de recherche analysé',r:['cdp']},
+    {l:'Mots-clés négatifs ajoutés (requêtes irrelevantes)',r:['cdp']},
+    {l:'Liste de négatifs partagée appliquée',r:['cdp']},
+  ]},
+  {id:'ag5',icon:'✍️',title:'Annonces & extensions',sub:'Qualité et complétude',time:'1 h',items:[
+    {l:'Min. 2 annonces RSA actives par groupe',r:['cdp']},
+    {l:'Force des annonces — au moins "Bonne" ou "Excellente"',r:['cdp']},
+    {l:'Mots-clés intégrés dans les titres',r:['cdp']},
+    {l:'Pages de destination pertinentes et cohérentes',r:['cdp']},
+    {l:'Extension liens annexes active (min. 4)',r:['cdp']},
+    {l:'Extension accroches active (min. 4)',r:['cdp']},
+    {l:'Extension numéro de téléphone active',r:['cdp']},
+    {l:'Extension lieu active (si local)',r:['cdp']},
+    {l:'Aucune annonce refusée par Google',r:['cdp']},
+  ]},
+  {id:'ag6',icon:'💰',title:'Enchères & budget',sub:'Efficacité des dépenses',time:'45 min',items:[
+    {l:'Stratégie d\'enchères appropriée aux objectifs',r:['strat','cdp']},
+    {l:'CPA cible ou ROAS cible réaliste',r:['strat','cdp']},
+    {l:'Pas de campagnes en limitation de budget permanente',r:['cdp']},
+    {l:'Répartition du budget entre campagnes optimale',r:['cdp']},
+    {l:'Ajustements d\'enchères mobiles vérifiés',r:['cdp']},
+    {l:'Plages horaires et jours analysés',r:['cdp']},
+  ]},
+  {id:'ag7',icon:'📈',title:'Performances & rapport',sub:'Analyse des résultats',time:'1 h',items:[
+    {l:'CTR moyen documenté et comparé aux benchmarks',r:['cdp']},
+    {l:'Taux de conversion documenté',r:['cdp']},
+    {l:'Coût par conversion documenté',r:['cdp']},
+    {l:'Score d\'optimisation du compte vérifié',r:['cdp']},
+    {l:'Recommandations Google Ads analysées (pertinentes vs non)',r:['strat','cdp']},
+    {l:'Rapport d\'audit complet rédigé et envoyé au client',r:['gc']},
+    {l:'Plan d\'action priorisé (quick wins vs long terme)',r:['strat','cdp']},
+    {l:'Réunion de présentation des résultats planifiée',r:['gc','client']},
   ]},
 ];
 
 var WEB_DATA = [
-  {id:'web1',icon:'🎨',title:'Design & maquettes',sub:'Conception visuelle',time:'5–10 h',items:[
-    {l:'Brief design reçu',r:['cdp','client']},
-    {l:'Maquettes Figma réalisées',r:['design']},
-    {l:'Maquettes approuvées (client)',r:['client']},
-    {l:'Design responsive validé',r:['design']},
+  {id:'web1',icon:'📋',title:'Brief & planification',sub:'Cadrage du projet',time:'2–3 h',items:[
+    {l:'Brief design et fonctionnel reçu et validé',r:['cdp','client']},
+    {l:'Objectifs du site définis (leads, ventes, info)',r:['strat','client']},
+    {l:'Arborescence du site approuvée',r:['cdp','client']},
+    {l:'Hébergement et domaine confirmés',r:['dev','client']},
+    {l:'CMS choisi (WordPress, Webflow, autre)',r:['dev','cdp']},
+    {l:'Échéancier de livraison établi',r:['cdp']},
   ]},
-  {id:'web2',icon:'💻',title:'Développement',sub:'Intégration et fonctionnalités',time:'10–30 h',items:[
+  {id:'web2',icon:'🎨',title:'Design & maquettes',sub:'Conception visuelle',time:'5–10 h',items:[
+    {l:'Moodboard approuvé par le client',r:['design','client']},
+    {l:'Maquettes Figma — page d\'accueil réalisée',r:['design']},
+    {l:'Maquettes Figma — pages internes réalisées',r:['design']},
+    {l:'Version mobile des maquettes réalisée',r:['design']},
+    {l:'Maquettes présentées et approuvées par le client',r:['design','client']},
+    {l:'Charte graphique respectée (couleurs, typos, logo)',r:['design']},
+  ]},
+  {id:'web3',icon:'💻',title:'Développement',sub:'Intégration et fonctionnalités',time:'10–30 h',items:[
     {l:'Environnement de staging créé',r:['dev']},
-    {l:'Intégration HTML/CSS complète',r:['dev']},
-    {l:'Formulaires testés',r:['dev']},
-    {l:'Analytics installé',r:['dev']},
-    {l:'Tests mobiles effectués',r:['dev']},
+    {l:'Intégration HTML/CSS conforme aux maquettes',r:['dev']},
+    {l:'Formulaires créés et testés (envoi de courriel)',r:['dev']},
+    {l:'Responsive mobile/tablette validé',r:['dev']},
+    {l:'Tests sur navigateurs — Chrome, Firefox, Safari',r:['dev']},
+    {l:'Vitesse de chargement optimisée (score PageSpeed)',r:['dev']},
+    {l:'Images compressées et alt textes ajoutés',r:['dev']},
+    {l:'Politique de confidentialité et mentions légales',r:['dev','client']},
   ]},
-  {id:'web3',icon:'🚀',title:'Mise en ligne',sub:'Déploiement et vérifications',time:'2 h',items:[
-    {l:'DNS configuré',r:['dev','client']},
-    {l:'SSL/HTTPS actif',r:['dev']},
-    {l:'Site testé sur navigateurs principaux',r:['dev']},
-    {l:'Redirections 301 configurées',r:['dev']},
-    {l:'Livraison au client',r:['cdp']},
+  {id:'web4',icon:'📊',title:'Tracking & SEO de base',sub:'Analytics et référencement',time:'2 h',items:[
+    {l:'Google Analytics GA4 installé et testé',r:['dev']},
+    {l:'Google Tag Manager configuré',r:['dev']},
+    {l:'Google Search Console lié',r:['dev']},
+    {l:'Balises title et meta rédigées pour chaque page',r:['strat','dev']},
+    {l:'Sitemap XML généré et soumis',r:['dev']},
+    {l:'Robots.txt configuré',r:['dev']},
+  ]},
+  {id:'web5',icon:'🚀',title:'Mise en ligne',sub:'Déploiement et livraison',time:'2 h',items:[
+    {l:'Contenu final intégré et validé par le client',r:['dev','client']},
+    {l:'DNS configuré et propagation vérifiée',r:['dev','client']},
+    {l:'SSL/HTTPS actif et fonctionnel',r:['dev']},
+    {l:'Redirections 301 configurées (si refonte)',r:['dev']},
+    {l:'Formulaires testés en production',r:['dev']},
+    {l:'Formation client livrée (si CMS)',r:['cdp']},
+    {l:'Rapport de livraison envoyé',r:['gc']},
+    {l:'Accès livrés au client (hébergeur, CMS, Drive)',r:['cdp']},
   ]},
 ];
 
 var SEO_DATA = [
-  {id:'seo1',icon:'🔎',title:'Audit initial',sub:'État des lieux du site',time:'3–5 h',items:[
-    {l:'Audit technique complété',r:['strat']},
-    {l:'Analyse des mots-clés cibles',r:['strat']},
-    {l:'Analyse de la concurrence',r:['strat']},
-    {l:'Rapport d\'audit livré',r:['cdp']},
+  {id:'seo1',icon:'🔎',title:'Audit initial',sub:'État des lieux du site',time:'4–6 h',items:[
+    {l:'Accès Google Search Console reçu',r:['cdp']},
+    {l:'Accès Google Analytics GA4 reçu',r:['cdp']},
+    {l:'Audit technique — erreurs 404, redirections, indexation',r:['strat']},
+    {l:'Audit vitesse — PageSpeed mobile et desktop',r:['strat']},
+    {l:'Audit on-page — titres, metas, structure H1-H6',r:['strat']},
+    {l:'Analyse des mots-clés actuels (Search Console)',r:['strat']},
+    {l:'Analyse de la concurrence organique (top 3)',r:['strat']},
+    {l:'Rapport d\'audit livré et présenté au client',r:['cdp']},
   ]},
-  {id:'seo2',icon:'⚙️',title:'Optimisations on-page',sub:'Améliorations directes',time:'4–8 h',items:[
-    {l:'Balises title et meta optimisées',r:['dev','strat']},
-    {l:'Structure des URLs vérifiée',r:['dev']},
-    {l:'Images compressées et alt textes',r:['dev']},
-    {l:'Maillage interne amélioré',r:['strat']},
-    {l:'Vitesse de chargement optimisée',r:['dev']},
+  {id:'seo2',icon:'🔑',title:'Recherche de mots-clés',sub:'Stratégie de contenu',time:'3–4 h',items:[
+    {l:'Mots-clés principaux identifiés (volume, difficulté, intention)',r:['strat']},
+    {l:'Mots-clés longue traîne identifiés',r:['strat']},
+    {l:'Mots-clés locaux identifiés (si applicable)',r:['strat']},
+    {l:'Mapping mots-clés par page défini',r:['strat']},
+    {l:'Liste de mots-clés approuvée par le client',r:['strat','client']},
   ]},
-  {id:'seo3',icon:'📊',title:'Suivi & rapports',sub:'Monitoring mensuel',time:'1–2 h/mois',items:[
-    {l:'Search Console configurée',r:['cdp']},
+  {id:'seo3',icon:'⚙️',title:'Optimisations on-page',sub:'Améliorations directes',time:'4–8 h',items:[
+    {l:'Balises title optimisées (mot-clé + nom entreprise)',r:['strat','dev']},
+    {l:'Meta descriptions rédigées pour chaque page',r:['strat','dev']},
+    {l:'Structure H1-H2-H3 vérifiée et optimisée',r:['strat','dev']},
+    {l:'URLs propres et descriptives',r:['dev']},
+    {l:'Images compressées et alt textes rédigés',r:['dev','strat']},
+    {l:'Maillage interne amélioré',r:['strat','dev']},
+    {l:'Vitesse de chargement optimisée (score 70+ mobile)',r:['dev']},
+    {l:'Schema markup ajouté (Organisation, LocalBusiness)',r:['dev']},
+    {l:'Google Business Profile optimisé (si local)',r:['strat']},
+  ]},
+  {id:'seo4',icon:'✍️',title:'Contenu SEO',sub:'Création et optimisation',time:'Variable',items:[
+    {l:'Pages de services optimisées (1 page = 1 mot-clé)',r:['strat']},
+    {l:'Page À propos optimisée',r:['strat']},
+    {l:'FAQ structurée ajoutée (rich snippets)',r:['strat','dev']},
+    {l:'Articles de blogue planifiés (calendrier éditorial)',r:['strat']},
+    {l:'Contenu approuvé par le client avant publication',r:['client']},
+  ]},
+  {id:'seo5',icon:'🔗',title:'SEO technique & off-page',sub:'Autorité et performance',time:'2–4 h',items:[
+    {l:'Sitemap XML soumis dans Search Console',r:['dev']},
+    {l:'Robots.txt vérifié',r:['dev']},
+    {l:'Canonical tags configurés',r:['dev']},
+    {l:'Backlinks existants analysés',r:['strat']},
+    {l:'Stratégie de netlinking définie',r:['strat']},
+  ]},
+  {id:'seo6',icon:'📊',title:'Suivi & rapports mensuels',sub:'Monitoring et ajustements',time:'1–2 h/mois',items:[
     {l:'Positions initiales documentées',r:['strat']},
-    {l:'Rapport mensuel programmé',r:['gc']},
+    {l:'Dashboard Search Console partagé',r:['cdp']},
+    {l:'Rapport mensuel — positions, trafic organique, conversions',r:['gc']},
+    {l:'Ajustements basés sur les performances',r:['strat']},
   ]},
 ];
 
 var CON_DATA = [
-  {id:'con1',icon:'📝',title:'Stratégie éditoriale',sub:'Planification du contenu',time:'2–4 h',items:[
-    {l:'Personas et audiences définis',r:['strat']},
-    {l:'Piliers de contenu établis',r:['strat','client']},
-    {l:'Calendrier éditorial créé (3 mois)',r:['strat','cdp']},
-    {l:'Tonalité et style validés',r:['client']},
+  {id:'con1',icon:'📋',title:'Stratégie éditoriale',sub:'Planification du contenu',time:'3–4 h',items:[
+    {l:'Objectifs de contenu définis (notoriété, leads, engagement)',r:['strat','client']},
+    {l:'Personas et audiences cibles définis',r:['strat']},
+    {l:'Piliers de contenu établis (3–5 thèmes principaux)',r:['strat','client']},
+    {l:'Tonalité, style et voix de marque validés',r:['strat','client']},
+    {l:'Plateformes de diffusion choisies',r:['strat','client']},
+    {l:'Fréquence de publication définie',r:['strat','cdp']},
+    {l:'Calendrier éditorial créé (3 mois minimum)',r:['strat','cdp']},
   ]},
-  {id:'con2',icon:'✍️',title:'Production',sub:'Rédaction et création',time:'Variable',items:[
-    {l:'Articles de blogue rédigés',r:['strat']},
-    {l:'Publications réseaux sociaux créées',r:['strat','design']},
-    {l:'Contenu révisé et approuvé',r:['client']},
-    {l:'Visuels associés produits',r:['design']},
+  {id:'con2',icon:'✍️',title:'Production de contenu',sub:'Rédaction et création',time:'Variable',items:[
+    {l:'Brief de contenu rédigé pour chaque pièce',r:['strat']},
+    {l:'Articles de blogue rédigés et optimisés SEO',r:['strat']},
+    {l:'Publications réseaux sociaux rédigées',r:['strat']},
+    {l:'Visuels et gabarits créés (formats par plateforme)',r:['design']},
+    {l:'Vidéos / Reels scriptés et produits (si applicable)',r:['design','strat']},
+    {l:'Contenu révisé et approuvé par le client',r:['client']},
+    {l:'Corrections appliquées',r:['strat']},
   ]},
-  {id:'con3',icon:'📲',title:'Publication & analyse',sub:'Diffusion et mesure',time:'1 h/semaine',items:[
-    {l:'Contenu publié selon calendrier',r:['gc']},
-    {l:'Engagement suivi et rapporté',r:['gc']},
-    {l:'Ajustements selon performances',r:['strat']},
+  {id:'con3',icon:'📲',title:'Publication & gestion',sub:'Diffusion selon calendrier',time:'1 h/semaine',items:[
+    {l:'Contenu programmé dans l\'outil de gestion',r:['gc']},
+    {l:'Contenu publié selon le calendrier éditorial',r:['gc']},
+    {l:'Commentaires et messages surveillés',r:['gc']},
+    {l:'Interactions répondues dans les 24h',r:['gc']},
+  ]},
+  {id:'con4',icon:'📊',title:'Analyse & rapports',sub:'Mesure des performances',time:'1–2 h/mois',items:[
+    {l:'Rapport mensuel — portée, engagement, clics',r:['gc']},
+    {l:'Contenu le plus performant identifié',r:['strat']},
+    {l:'Ajustements de stratégie proposés',r:['strat']},
+    {l:'Calendrier du mois suivant ajusté selon les résultats',r:['strat','cdp']},
   ]},
 ];
 
@@ -2548,10 +2767,18 @@ function saveHebdo(){ try{localStorage.setItem('adux_hebdo',JSON.stringify(hebdo
 var hebdoState = { semaine: ftWeekKey ? ftWeekKey(new Date()) : new Date().toISOString().slice(0,10), filtreResp: '' };
 
 function hbGetMonday(d){
-  var dt=new Date(d); var day=dt.getDay();
+  // Fix timezone: parse string as local date not UTC
+  var dt;
+  if(typeof d==='string'){ var p=d.split('-'); dt=new Date(+p[0],+p[1]-1,+p[2]); }
+  else { dt=new Date(d); }
+  var day=dt.getDay();
   dt.setDate(dt.getDate()-day+(day===0?-6:1)); dt.setHours(0,0,0,0); return dt;
 }
-function hbWeekKey(d){ var dt=hbGetMonday(new Date(d)); return dt.toISOString().slice(0,10); }
+function hbWeekKey(d){
+  var dt=hbGetMonday(d);
+  var y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), dd=String(dt.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
 function hbWeekRange(wk){
   var mon=new Date(wk); var sun=new Date(wk); sun.setDate(sun.getDate()+6);
   var fmt=function(d){return d.toLocaleDateString('fr-CA',{day:'2-digit',month:'short'});};
@@ -3207,7 +3434,7 @@ function getAlerts(){
   });
   projects.forEach(function(proj,pi){
     var prev=ctxProj; ctxProj=proj;
-    var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
+    var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,auditgoo:AUDIT_GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
     var tot=0;
     proj.types.forEach(function(ns){var d=dataMap[ns];if(!d)return;d.forEach(function(sec){tot+=doneCount(ns,sec);});});
     ctxProj=prev;
@@ -3229,7 +3456,7 @@ function updateNotifBadge(){
 function buildChecklists(){
   var p = document.getElementById('p-checklists'); if(!p) return;
 
-  var dataMap = {onb:ONB_DATA,bhproc:BHP_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA};
+  var dataMap = {onb:ONB_DATA,bhproc:BHP_DATA,meta:META_DATA,goo:GOO_DATA,auditgoo:AUDIT_GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA};
   var ALL_MODULES = ['onb','bhproc','meta','goo','web','seo','contenu'];
   var active = projects.filter(function(pr){ return !pr._archived; });
 
@@ -3367,7 +3594,7 @@ function buildNotif(){
 // ══════════════════════════════════════════
 function buildDashboard(){
   var p=document.getElementById('p-dashboard'); if(!p) return;
-  var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
+  var dataMap={onb:ONB_DATA,meta:META_DATA,goo:GOO_DATA,auditgoo:AUDIT_GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA,bhproc:BHP_DATA};
   var labels={onb:'Onboarding',meta:'Meta Ads',goo:'Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu',bhproc:"Banque d'heures"};
   var icons={onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',web:'🌐',seo:'📈',contenu:'✍️'};
   var alerts=getAlerts();
@@ -3761,7 +3988,7 @@ function buildProjetDetail(){
   if(i===null||i===undefined||!projects[i]){ p.innerHTML='<div style="padding:40px;text-align:center;color:#bbb">Projet introuvable</div>'; return; }
   var proj = projects[i];
 
-  var dataMap={onb:ONB_DATA,bhproc:BHP_DATA,meta:META_DATA,goo:GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA};
+  var dataMap={onb:ONB_DATA,bhproc:BHP_DATA,meta:META_DATA,goo:GOO_DATA,auditgoo:AUDIT_GOO_DATA,web:WEB_DATA,seo:SEO_DATA,contenu:CON_DATA};
   var labels={onb:'Onboarding',bhproc:"Banque d\'heures",meta:'Meta Ads',goo:'Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu'};
   var icons={onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',web:'🌐',seo:'📈',contenu:'✍️'};
 
