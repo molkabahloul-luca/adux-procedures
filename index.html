@@ -2779,7 +2779,10 @@ function buildHebdo(){
   var p=document.getElementById('p-hebdo'); if(!p) return;
   hebdoState.semaine = hbWeekKey(new Date());
   window.hbNav = function(delta){
-    var dt=new Date(hebdoState.semaine); dt.setDate(dt.getDate()+delta*7);
+    // Parse as local date to avoid timezone shift
+    var p=hebdoState.semaine.split('-');
+    var dt=new Date(+p[0],+p[1]-1,+p[2]);
+    dt.setDate(dt.getDate()+delta*7);
     hebdoState.semaine=hbWeekKey(dt); renderHebdo();
   };
   window.hbToday = function(){ hebdoState.semaine=hbWeekKey(new Date()); renderHebdo(); };
@@ -2800,7 +2803,7 @@ function renderHebdo(){
 
   // ── Objectifs ──
   var filtreResp = hebdoState.filtreResp||'';
-  var objFiltered = dat.objectifs.filter(function(o,i){
+  var objFiltered = (dat&&dat.objectifs||[]).filter(function(o,i){
     if(!filtreResp) return true;
     return (o.resp||'')=== filtreResp;
   });
@@ -2868,7 +2871,7 @@ function renderHebdo(){
   }).join('') : '<div style="grid-column:1/-1;text-align:center;color:#bbb;font-size:12px;padding:24px;background:#fff;border-radius:8px;border:1px dashed #e8e8e8">Aucun membre — cliquez sur <strong>+ Ajouter un membre</strong></div>';
 
   // ── Suivi clients ──
-  var clientCards = dat.clients.length ? dat.clients.map(function(c,i){
+  var clientCards = (dat.clients||[]).length ? dat.clients.map(function(c,i){
     return '<div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;overflow:hidden">'+
       '<div style="background:#2a2a2a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">'+
         '<input type="text" value="'+c.nom.replace(/"/g,'&quot;')+'" onchange="hbClientSet(\''+wk+'\','+i+',\'nom\',this.value)" '+
