@@ -4820,6 +4820,7 @@ var SB_WK  = 'adux-molkaadux';
 
 var sbSyncing = false;
 var sbLastSync = null;
+var sbLocalVersion = Date.now(); // Version locale — mis à jour à chaque sauvegarde
 
 function sbHeaders(){
   return {
@@ -4830,13 +4831,71 @@ function sbHeaders(){
   };
 }
 
+// ── SAUVEGARDE IMMÉDIATE ──────────────────────────────────────────
+function sbSave(){
+  if(sbSyncing) return;
+  sbSyncing = true;
+  var indicator = document.getElementById('sb-status');
+  if(indicator) indicator.textContent = '💾 Sauvegarde...';
+
+  sbLocalVersion = Date.now();
+
+  var payload = {
+    workspace_key: SB_WK,
+    data: {
+      _version:  sbLocalVersion,
+      _savedAt:  new Date().toISOString(),
+      projects:  JSON.parse(JSON.stringify(projects)),
+      states:    JSON.parse(JSON.stringify(states)),
+      bhData:    JSON.parse(JSON.stringify(bhData)),
+      bhClients: JSON.parse(JSON.stringify(bhClients)),
+      trData:    JSON.parse(JSON.stringify(trData)),
+      pmData:    JSON.parse(JSON.stringify(pmData)),
+      ftData:    JSON.parse(JSON.stringify(ftData)),
+      hebdoData: JSON.parse(JSON.stringify(hebdoData)),
+      notesData: JSON.parse(JSON.stringify(notesData)),
+      todoData:  JSON.parse(JSON.stringify(todoData)),
+    },
+    updated_at: new Date().toISOString()
+  };
+
+  var h = sbHeaders();
+  h['Prefer'] = 'resolution=merge-duplicates';
+
+  fetch(SB_URL + '/rest/v1/adux_data', {
+    method: 'POST',
+    headers: h,
+    body: JSON.stringify(payload)
+  })
+  .then(function(){
+    sbSyncing = false;
+    sbLastSync = new Date();
+    if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+    console.log('Supabase: sauvegarde OK', new Date().toLocaleTimeString());
+  })
+  .catch(function(e){
+    sbSyncing = false;
+    if(indicator) indicator.textContent = '⚠ Erreur synchro';
+    console.warn('Supabase save error:', e);
+    // Retry after 5 seconds
+    setTimeout(sbSave, 5000);
+  });
+}
+
+// ── CHARGEMENT ET FUSION ──────────────────────────────────────────
 function sbLoad(){
   var indicator = document.getElementById('sb-status');
   if(indicator) indicator.textContent = '⏳ Synchro...';
 
-  var localHebdo = JSON.parse(JSON.stringify(hebdoData));
-  var localTodo  = JSON.parse(JSON.stringify(todoData));
-  var localNotes = JSON.parse(JSON.stringify(notesData));
+  // Snapshot local AVANT de charger Supabase
+  var snap = {
+    projects:  JSON.parse(JSON.stringify(projects)),
+    hebdoData: JSON.parse(JSON.stringify(hebdoData)),
+    todoData:  JSON.parse(JSON.stringify(todoData)),
+    notesData: JSON.parse(JSON.stringify(notesData)),
+    trData:    JSON.parse(JSON.stringify(trData)),
+    bhClients: JSON.parse(JSON.stringify(bhClients)),
+  };
 
   fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
     headers: sbHeaders()
@@ -4844,80 +4903,121 @@ function sbLoad(){
   .then(function(r){ return r.json(); })
   .then(function(rows){
     if(!rows || !rows.length || !rows[0].data){
-      sbSave(); return;
+      // Supabase vide — pousser les données locales
+      console.log('Supabase vide — initialisation avec données locales');
+      sbSave();
+      return;
     }
-    var d = rows[0].data;
 
-    if(d.projects && d.projects.length) projects = d.projects;
-    if(d.states)    Object.assign(states,    d.states);
-    if(d.bhData)    Object.assign(bhData,    d.bhData);
-    if(d.bhClients) Object.assign(bhClients, d.bhClients);
+    var d = rows[0].data;
+    var sbVersion = d._version || 0;
+
+    // ── Si version locale plus récente que Supabase : pousser local ──
+    if(sbLocalVersion > sbVersion + 5000){ // 5s de marge
+      console.log('Données locales plus récentes — push vers Supabase');
+      sbSave();
+      return;
+    }
+
+    // ── Fusion intelligente section par section ──
+
+    // Projets — prendre le plus grand ensemble
+    if(d.projects && d.projects.length >= snap.projects.length){
+      projects = d.projects;
+    } else if(d.projects){
+      d.projects.forEach(function(sp){
+        if(!projects.find(function(p){return p.id===sp.id;})) projects.push(sp);
+      });
+    }
+
+    if(d.states)    Object.assign(states, d.states);
+    if(d.bhData)    Object.assign(bhData, d.bhData);
     if(d.pmData)    pmData = d.pmData;
     if(d.ftData)    ftData = d.ftData;
 
+    // BH clients — fusionner
+    if(d.bhClients){
+      Object.keys(d.bhClients).forEach(function(k){
+        if(!snap.bhClients[k]) bhClients[k] = d.bhClients[k];
+      });
+    }
+
+    // Suivi projet — garder le plus grand
     if(d.trData){
-      var sbClients = (d.trData.clients||[]).length;
-      if(sbClients >= trData.clients.length){
+      var sbC = (d.trData.clients||[]).length;
+      if(sbC >= snap.trData.clients.length){
         trData = d.trData;
       } else {
-        if(d.trData.clients) d.trData.clients.forEach(function(sc){
+        (d.trData.clients||[]).forEach(function(sc){
           var found = trData.clients.find(function(c){return c.nom===sc.nom||c.id===sc.id;});
-          if(found){ found.statuts=sc.statuts||{}; found.notes=sc.notes||{}; found.budget=sc.budget||0; found.services=sc.services||found.services; found.statutsP=sc.statutsP||found.statutsP; found.notesP=sc.notesP||found.notesP; found.budgetP=sc.budgetP||found.budgetP; found.respP=sc.respP||found.respP; }
+          if(found){
+            found.statuts=sc.statuts||{}; found.statutsP=sc.statutsP||found.statutsP;
+            found.notesP=sc.notesP||found.notesP; found.budgetP=sc.budgetP||found.budgetP;
+            found.respP=sc.respP||found.respP; found.services=sc.services||found.services;
+          }
         });
-        trData.annee = d.trData.annee || trData.annee;
-        trData.moisActif = d.trData.moisActif !== undefined ? d.trData.moisActif : trData.moisActif;
       }
       trMigrateMultiPlat();
     }
 
-    // Notes — prendre le plus grand
-    if(d.notesData){
-      var sbN = (d.notesData.notes||[]).length;
-      if(sbN >= (localNotes.notes||[]).length){
-        notesData = d.notesData;
-      } else {
-        (d.notesData.notes||[]).forEach(function(n){
-          if(!notesData.notes.find(function(ln){return ln.id===n.id;})) notesData.notes.push(n);
-        });
-      }
-    }
-
-    // Hebdo — fusion semaine par semaine, jamais écraser
-    if(d.hebdoData){
-      Object.keys(d.hebdoData).forEach(function(wk){
-        var sbWk = d.hebdoData[wk];
-        var localWk = localHebdo[wk];
-        if(!localWk){
-          hebdoData[wk] = sbWk;
-        } else {
-          var sbTotal = (sbWk.objectifs||[]).length + (sbWk.standups||[]).length;
-          var locTotal = (localWk.objectifs||[]).length + (localWk.standups||[]).length;
-          if(sbTotal > locTotal) hebdoData[wk] = sbWk;
+    // Notes — fusionner par ID
+    if(d.notesData && d.notesData.notes){
+      var sbNotes = d.notesData.notes;
+      sbNotes.forEach(function(n){
+        if(!notesData.notes.find(function(ln){return ln.id===n.id;})){
+          notesData.notes.push(n);
         }
       });
-      Object.keys(localHebdo).forEach(function(wk){
-        if(!d.hebdoData[wk]) hebdoData[wk] = localHebdo[wk];
+      // Trier par date desc
+      notesData.notes.sort(function(a,b){return (b.date+b.heure||'').localeCompare(a.date+a.heure||'');});
+    }
+
+    // Hebdo — fusionner semaine par semaine
+    if(d.hebdoData){
+      Object.keys(d.hebdoData).forEach(function(wk){
+        var sbWk  = d.hebdoData[wk];
+        var locWk = snap.hebdoData[wk];
+        if(!locWk){
+          hebdoData[wk] = sbWk;
+        } else {
+          // Garder le plus complet
+          var sbScore  = (sbWk.objectifs||[]).length*2 + (sbWk.standups||[]).length;
+          var locScore = (locWk.objectifs||[]).length*2 + (locWk.standups||[]).length;
+          if(sbScore > locScore) hebdoData[wk] = sbWk;
+          // Sinon garder local
+        }
+      });
+      // Garder semaines locales absentes de Supabase
+      Object.keys(snap.hebdoData).forEach(function(wk){
+        if(!d.hebdoData[wk]) hebdoData[wk] = snap.hebdoData[wk];
       });
     }
 
-    // Todo — fusion par ID, jamais écraser
+    // Todo — fusionner par ID
     if(d.todoData && d.todoData.taches){
-      var merged = JSON.parse(JSON.stringify(localTodo.taches||[]));
+      var merged = JSON.parse(JSON.stringify(snap.todoData.taches||[]));
       (d.todoData.taches||[]).forEach(function(t){
         var exists = merged.find(function(lt){return lt.id===t.id;});
-        if(!exists) merged.push(t);
-        else exists.done = t.done;
+        if(!exists){
+          merged.push(t);
+        } else {
+          // Mettre à jour seulement le statut done
+          exists.done = t.done;
+        }
       });
       todoData.taches = merged;
     }
 
     sbLastSync = new Date();
     if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-    sbSave();
+
+    // Sauvegarder l'état fusionné
+    setTimeout(sbSave, 500);
+
     renderProjects();
     updateNotifBadge();
     updateCtxBar();
-    console.log('Supabase: fusion OK');
+    console.log('Supabase: fusion complète ✓', new Date().toLocaleTimeString());
   })
   .catch(function(e){
     if(indicator) indicator.textContent = '⚠ Hors ligne';
@@ -4925,18 +5025,19 @@ function sbLoad(){
   });
 }
 
-
 function sbRefresh(){ sbLoad(); }
 
-// Sync automatique toutes les 30 secondes
-setInterval(sbRefresh, 30000);
+// ── AUTO-SAVE toutes les 30 secondes ──────────────────────────────
+setInterval(function(){
+  if(!sbSyncing) sbSave();
+}, 30000);
 
-// Patch toutes les fonctions save
+// ── PATCH : chaque save déclenche Supabase ─────────────────────────
 var _sbSaveDebounce = null;
 function sbSaveDebounced(){
   if(typeof sbSave !== 'function') return;
   clearTimeout(_sbSaveDebounce);
-  _sbSaveDebounce = setTimeout(sbSave, 1500);
+  _sbSaveDebounce = setTimeout(sbSave, 1000);
 }
 
 var _origSaveProjects = saveProjects; saveProjects = function(){ _origSaveProjects(); sbSaveDebounced(); };
@@ -4948,9 +5049,17 @@ var _origSaveFT = saveFT;             saveFT       = function(){ _origSaveFT(); 
 var _origSaveHebdo = saveHebdo;       saveHebdo    = function(){ _origSaveHebdo();    sbSaveDebounced(); };
 var _origSaveNotes = saveNotes;       saveNotes    = function(){ _origSaveNotes();    sbSaveDebounced(); };
 var _origSaveTodo = saveTodo;         saveTodo     = function(){ _origSaveTodo();     sbSaveDebounced(); };
+var _origSaveStates = saveStates;     saveStates   = function(){ _origSaveStates();   sbSaveDebounced(); };
 
-// Lancer la synchro au démarrage
-window.addEventListener('load', function(){ setTimeout(sbLoad, 800); });
+// ── SAUVEGARDE AVANT FERMETURE ─────────────────────────────────────
+window.addEventListener('beforeunload', function(){
+  sbSave();
+});
+
+// ── DÉMARRAGE ─────────────────────────────────────────────────────
+window.addEventListener('load', function(){
+  setTimeout(sbLoad, 800);
+});
 
 </script>
 </body>
