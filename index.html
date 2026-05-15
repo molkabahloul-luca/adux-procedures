@@ -755,7 +755,7 @@ try { projects = JSON.parse(localStorage.getItem('adux_proj')||'[]'); } catch(e)
 function saveProjects(){ try{localStorage.setItem('adux_proj',JSON.stringify(projects));}catch(e){} }
 
 var TL = {onb:'Onboarding',bhproc:'Banque d\'heures',meta:'Meta Ads',goo:'Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu',plan:'Plan média',tracker:'Suivi projet'};
-var TI = {onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',web:'🌐',seo:'📈',contenu:'✍️',plan:'📅',tracker:'📊'};
+var TI = {onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',auditgoo:'🔬',web:'🌐',seo:'📈',contenu:'✍️',plan:'📅',tracker:'📊'};
 
 function initWizard(){
   document.querySelectorAll('#wiz-types input').forEach(function(cb){
@@ -4904,12 +4904,7 @@ function sbLoad(){
     var d = rows[0].data;
     var sbVersion = d._version || 0;
 
-    // ── Si version locale plus récente que Supabase : pousser local ──
-    if(sbLocalVersion > sbVersion + 5000){ // 5s de marge
-      console.log('Données locales plus récentes — push vers Supabase');
-      sbSave();
-      return;
-    }
+    // On fusionne toujours — jamais d'écrasement unilatéral
 
     // ── Fusion intelligente section par section ──
 
@@ -5003,8 +4998,8 @@ function sbLoad(){
     sbLastSync = new Date();
     if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
 
-    // Sauvegarder l'état fusionné
-    setTimeout(sbSave, 500);
+    // Sauvegarder l'état fusionné (délai pour laisser les autres navigateurs syncer)
+    setTimeout(sbSave, 3000);
 
     renderProjects();
     updateNotifBadge();
