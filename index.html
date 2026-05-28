@@ -4834,46 +4834,106 @@ function sbSave(){
   var indicator = document.getElementById('sb-status');
   if(indicator) indicator.textContent = '💾 Sauvegarde...';
 
-  sbLocalVersion = Date.now();
+  // Étape 1: Charger ce qui est dans Supabase
+  fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
+    headers: sbHeaders()
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    var sbData = (rows && rows.length && rows[0].data) ? rows[0].data : {};
 
-  var payload = {
-    workspace_key: SB_WK,
-    data: {
-      _version:  sbLocalVersion,
-      _savedAt:  new Date().toISOString(),
-      projects:  JSON.parse(JSON.stringify(projects)),
-      states:    JSON.parse(JSON.stringify(states)),
-      bhData:    JSON.parse(JSON.stringify(bhData)),
-      bhClients: JSON.parse(JSON.stringify(bhClients)),
-      trData:    JSON.parse(JSON.stringify(trData)),
-      pmData:    JSON.parse(JSON.stringify(pmData)),
-      ftData:    JSON.parse(JSON.stringify(ftData)),
-      hebdoData: JSON.parse(JSON.stringify(hebdoData)),
-      notesData: JSON.parse(JSON.stringify(notesData)),
-      todoData:  JSON.parse(JSON.stringify(todoData)),
-    },
-    updated_at: new Date().toISOString()
-  };
+    // Étape 2: Fusionner projets — JAMAIS perdre un projet de Supabase
+    var localProj  = JSON.parse(JSON.stringify(projects));
+    var sbProj     = sbData.projects || [];
+    var allProj    = JSON.parse(JSON.stringify(sbProj));
+    // Ajouter projets locaux absents de Supabase
+    localProj.forEach(function(lp){
+      if(!allProj.find(function(sp){return sp.id===lp.id;})) allProj.push(lp);
+    });
+    // Mettre à jour les états (archived, etc.) des projets communs avec version locale
+    allProj.forEach(function(sp,i){
+      var lp = localProj.find(function(p){return p.id===sp.id;});
+      if(lp){ allProj[i] = lp; } // Version locale toujours à jour pour les détails
+    });
 
-  var h = sbHeaders();
-  h['Prefer'] = 'resolution=merge-duplicates';
+    // Étape 3: Fusionner notes — jamais perdre une note
+    var allNotes = JSON.parse(JSON.stringify(notesData));
+    if(sbData.notesData && sbData.notesData.notes){
+      sbData.notesData.notes.forEach(function(n){
+        if(!allNotes.notes.find(function(ln){return ln.id===n.id;})) allNotes.notes.push(n);
+      });
+    }
 
-  fetch(SB_URL + '/rest/v1/adux_data', {
-    method: 'POST',
-    headers: h,
-    body: JSON.stringify(payload)
+    // Étape 4: Fusionner todo — jamais perdre une tâche
+    var allTodo = JSON.parse(JSON.stringify(todoData));
+    if(sbData.todoData && sbData.todoData.taches){
+      sbData.todoData.taches.forEach(function(t){
+        if(!allTodo.taches.find(function(lt){return lt.id===t.id;})) allTodo.taches.push(t);
+      });
+    }
+
+    // Étape 5: Fusionner hebdo — jamais perdre une semaine
+    var allHebdo = JSON.parse(JSON.stringify(hebdoData));
+    if(sbData.hebdoData){
+      Object.keys(sbData.hebdoData).forEach(function(wk){
+        if(!allHebdo[wk]){
+          allHebdo[wk] = sbData.hebdoData[wk];
+        } else {
+          // Fusionner objectifs par index — garder done:true
+          var sbObjs  = sbData.hebdoData[wk].objectifs || [];
+          var locObjs = allHebdo[wk].objectifs || [];
+          sbObjs.forEach(function(so,i){
+            if(locObjs[i]) locObjs[i].done = locObjs[i].done || so.done;
+          });
+        }
+      });
+    }
+
+    // Étape 6: Sauvegarder la version fusionnée
+    var payload = {
+      workspace_key: SB_WK,
+      data: {
+        _savedAt:  new Date().toISOString(),
+        projects:  allProj,
+        states:    JSON.parse(JSON.stringify(states)),
+        bhData:    JSON.parse(JSON.stringify(bhData)),
+        bhClients: JSON.parse(JSON.stringify(bhClients)),
+        trData:    JSON.parse(JSON.stringify(trData)),
+        pmData:    JSON.parse(JSON.stringify(pmData)),
+        ftData:    JSON.parse(JSON.stringify(ftData)),
+        hebdoData: allHebdo,
+        notesData: allNotes,
+        todoData:  allTodo,
+      },
+      updated_at: new Date().toISOString()
+    };
+
+    var h = sbHeaders();
+    h['Prefer'] = 'resolution=merge-duplicates';
+
+    // Mettre à jour les variables locales avec la version fusionnée
+    projects   = allProj;
+    notesData  = allNotes;
+    todoData   = allTodo;
+    hebdoData  = allHebdo;
+
+    return fetch(SB_URL + '/rest/v1/adux_data', {
+      method: 'POST', headers: h, body: JSON.stringify(payload)
+    });
   })
   .then(function(){
     sbSyncing = false;
     sbLastSync = new Date();
     if(indicator) indicator.textContent = '✓ ' + sbLastSync.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-    console.log('Supabase: sauvegarde OK', new Date().toLocaleTimeString());
+    // Re-render avec les données fusionnées
+    renderProjects();
+    updateNotifBadge();
+    console.log('Supabase: sauvegarde fusionnée OK', new Date().toLocaleTimeString());
   })
   .catch(function(e){
     sbSyncing = false;
     if(indicator) indicator.textContent = '⚠ Erreur synchro';
     console.warn('Supabase save error:', e);
-    // Retry after 5 seconds
     setTimeout(sbSave, 5000);
   });
 }
