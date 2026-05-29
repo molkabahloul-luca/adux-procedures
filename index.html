@@ -753,9 +753,16 @@ window.addEventListener('DOMContentLoaded', function(){
 var projects = [];
 try { projects = JSON.parse(localStorage.getItem('adux_proj')||'[]'); } catch(e){ projects = []; }
 function saveProjects(){
-  // Marquer les projets modifiés localement
   projects.forEach(function(p){ p._localMod = Date.now(); });
   try{localStorage.setItem('adux_proj',JSON.stringify(projects));}catch(e){}
+}
+function getDeletedIds(){
+  try{ return JSON.parse(localStorage.getItem('adux_deleted_ids')||'[]'); }catch(e){ return []; }
+}
+function addDeletedId(id){
+  var ids = getDeletedIds();
+  if(ids.indexOf(id)===-1){ ids.push(id); }
+  try{ localStorage.setItem('adux_deleted_ids', JSON.stringify(ids)); }catch(e){}
 }
 
 var TL = {onb:'Onboarding',bhproc:'Banque d\'heures',meta:'Meta Ads',goo:'Google Ads',auditgoo:'Audit Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu',plan:'Plan média',tracker:'Suivi projet'};
@@ -4846,8 +4853,11 @@ function sbSave(){
     var localProj  = JSON.parse(JSON.stringify(projects));
     var sbProj     = sbData.projects || [];
     var allProj    = JSON.parse(JSON.stringify(sbProj));
-    // Ajouter projets locaux absents de Supabase
+    // Ajouter projets locaux absents de Supabase (sauf supprimés)
+    var _delIds2 = getDeletedIds();
+    allProj = allProj.filter(function(sp){ return _delIds2.indexOf(sp.id)===-1; });
     localProj.forEach(function(lp){
+      if(_delIds2.indexOf(lp.id)!==-1) return;
       if(!allProj.find(function(sp){return sp.id===lp.id;})) allProj.push(lp);
     });
     // Mettre à jour les états (archived, etc.) des projets communs avec version locale
@@ -4895,6 +4905,7 @@ function sbSave(){
       data: {
         _savedAt:  new Date().toISOString(),
         projects:  allProj,
+        _deletedIds: getDeletedIds(),
         states:    (function(){
           // Fusionner states avec Supabase pour ne pas perdre les coches des collègues
           var merged = JSON.parse(JSON.stringify(states));
@@ -4983,6 +4994,12 @@ function sbLoad(){
     var d = rows[0].data;
     var sbVersion = d._version || 0;
 
+    // Charger les IDs supprimés depuis Supabase
+    if(d._deletedIds && d._deletedIds.length){
+      var existingDel = getDeletedIds();
+      d._deletedIds.forEach(function(id){ if(existingDel.indexOf(id)===-1) existingDel.push(id); });
+      try{ localStorage.setItem('adux_deleted_ids', JSON.stringify(existingDel)); }catch(e){}
+    }
     // On fusionne toujours — jamais d'écrasement unilatéral
 
     // ── Fusion intelligente section par section ──
@@ -5150,9 +5167,13 @@ function sbSyncAndReload(){
     var sbData = (rows && rows.length && rows[0].data) ? rows[0].data : {};
 
     // Étape 2: Fusionner TOUT — local + Supabase
-    // Projets
+    // Projets — respecter les suppressions
+    var _delIds = getDeletedIds();
     var allProj = JSON.parse(JSON.stringify(sbData.projects || []));
+    // Filtrer les projets supprimés de Supabase
+    allProj = allProj.filter(function(sp){ return _delIds.indexOf(sp.id)===-1; });
     projects.forEach(function(lp){
+      if(_delIds.indexOf(lp.id)!==-1) return; // Ignorer supprimés
       if(!allProj.find(function(sp){return sp.id===lp.id;})) allProj.push(lp);
       else { var i=allProj.findIndex(function(sp){return sp.id===lp.id;}); allProj[i]=lp; }
     });
