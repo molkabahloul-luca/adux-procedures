@@ -4255,8 +4255,7 @@ function tdAdd(jour){
 function tdSet(id, field, val){
   var t=todoData.taches.find(function(x){return x.id===id;}); if(!t) return;
   if(field==='done') val = !!val;
-  t[field]=val; saveTodo();
-  if(field==='done'||field==='priorite') renderTodo();
+  t[field]=val; saveTodo(); renderTodo();
 }
 
 function tdDel(id){
@@ -4300,7 +4299,7 @@ function renderTodo(){
       '</div>'+
       (isExp?
         '<div style="padding:8px 10px;background:#fafafa;border-top:1px solid #f0f0f0;display:flex;flex-direction:column;gap:6px">'+
-          '<input type="text" value="'+t.texte.replace(/"/g,'&quot;')+'" placeholder="Titre…" onchange="tdSet('+t.id+',\'texte\',this.value)" style="width:100%;padding:5px 8px;border:1px solid #e8e8e8;border-radius:5px;font-size:12px;font-family:Barlow,sans-serif;outline:none">'+
+          '<input type="text" value="'+t.texte.replace(/"/g,'&quot;')+'" placeholder="Titre…" oninput="tdSet('+t.id+',\'texte\',this.value)" style="width:100%;padding:5px 8px;border:1px solid #e8e8e8;border-radius:5px;font-size:12px;font-family:Barlow,sans-serif;outline:none">'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">'+
             '<select onchange="tdSet('+t.id+',\'priorite\',this.value)" style="padding:4px 6px;border:1px solid #e8e8e8;border-radius:5px;font-size:10px;font-weight:700;background:'+pr.bg+';color:'+pr.color+';cursor:pointer;font-family:Barlow,sans-serif">'+prOpts+'</select>'+
             '<input type="date" value="'+t.dateLimit+'" onchange="tdSet('+t.id+',\'dateLimit\',this.value)" style="padding:4px 6px;border:1px solid '+(overdue?'#fca5a5':'#e8e8e8')+';border-radius:5px;font-size:10px;font-family:IBM Plex Mono,monospace;background:'+(overdue?'#fff5f5':'#fff')+';outline:none">'+
