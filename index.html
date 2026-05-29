@@ -5140,27 +5140,90 @@ window.addEventListener('load', function(){
 function sbSyncAndReload(){
   var indicator = document.getElementById('sb-status');
   if(indicator) indicator.textContent = '⏳ Sync...';
-  // Load from Supabase, save to localStorage, then reload
+
+  // Étape 1: Lire Supabase
   fetch(SB_URL + '/rest/v1/adux_data?workspace_key=eq.' + SB_WK + '&select=data', {
     headers: sbHeaders()
   })
   .then(function(r){ return r.json(); })
   .then(function(rows){
-    if(!rows || !rows.length || !rows[0].data) { location.reload(); return; }
-    var d = rows[0].data;
-    // Save Supabase data to localStorage
-    if(d.projects)   { try{ localStorage.setItem('adux_proj',    JSON.stringify(d.projects));   }catch(e){} }
-    if(d.states)     { try{ localStorage.setItem('adux_states',  JSON.stringify(d.states));     }catch(e){} }
-    if(d.bhData)     { try{ localStorage.setItem('adux_bh',      JSON.stringify(d.bhData));     }catch(e){} }
-    if(d.bhClients)  { try{ localStorage.setItem('adux_bhc',     JSON.stringify(d.bhClients));  }catch(e){} }
-    if(d.trData)     { try{ localStorage.setItem('adux_tr',      JSON.stringify(d.trData));     }catch(e){} }
-    if(d.hebdoData)  { try{ localStorage.setItem('adux_hebdo',   JSON.stringify(d.hebdoData));  }catch(e){} }
-    if(d.notesData)  { try{ localStorage.setItem('adux_notes',   JSON.stringify(d.notesData));  }catch(e){} }
-    if(d.todoData)   { try{ localStorage.setItem('adux_todo',    JSON.stringify(d.todoData));   }catch(e){} }
-    if(d.ftData)     { try{ localStorage.setItem('adux_ft',      JSON.stringify(d.ftData));     }catch(e){} }
-    if(d.pmData)     { try{ localStorage.setItem('adux_pm',      JSON.stringify(d.pmData));     }catch(e){} }
-    // Reload page with fresh data
-    location.reload();
+    var sbData = (rows && rows.length && rows[0].data) ? rows[0].data : {};
+
+    // Étape 2: Fusionner TOUT — local + Supabase
+    // Projets
+    var allProj = JSON.parse(JSON.stringify(sbData.projects || []));
+    projects.forEach(function(lp){
+      if(!allProj.find(function(sp){return sp.id===lp.id;})) allProj.push(lp);
+      else { var i=allProj.findIndex(function(sp){return sp.id===lp.id;}); allProj[i]=lp; }
+    });
+
+    // States (coches)
+    var allStates = JSON.parse(JSON.stringify(sbData.states || {}));
+    Object.keys(states).forEach(function(pid){
+      if(!allStates[pid]){ allStates[pid]=states[pid]; return; }
+      Object.keys(states[pid]).forEach(function(mod){
+        if(!allStates[pid][mod]){ allStates[pid][mod]=states[pid][mod]; return; }
+        Object.keys(states[pid][mod]).forEach(function(iid){
+          if(!allStates[pid][mod][iid]) allStates[pid][mod][iid]=states[pid][mod][iid];
+          else if(states[pid][mod][iid]&&states[pid][mod][iid].done) allStates[pid][mod][iid].done=true;
+        });
+      });
+    });
+
+    // Notes
+    var allNotes = JSON.parse(JSON.stringify(sbData.notesData || {notes:[]}));
+    (notesData.notes||[]).forEach(function(n){
+      if(!allNotes.notes.find(function(sn){return sn.id===n.id;})) allNotes.notes.push(n);
+    });
+
+    // Todo
+    var allTodo = JSON.parse(JSON.stringify(sbData.todoData || {taches:[]}));
+    (todoData.taches||[]).forEach(function(t){
+      if(!allTodo.taches.find(function(st){return st.id===t.id;})) allTodo.taches.push(t);
+    });
+
+    // Hebdo
+    var allHebdo = JSON.parse(JSON.stringify(sbData.hebdoData || {}));
+    Object.keys(hebdoData).forEach(function(wk){
+      if(!allHebdo[wk]){ allHebdo[wk]=hebdoData[wk]; return; }
+      var sbObjs=(allHebdo[wk].objectifs||[]), locObjs=(hebdoData[wk].objectifs||[]);
+      locObjs.forEach(function(lo,i){
+        if(sbObjs[i]){ if(lo.done) sbObjs[i].done=true; }
+        else sbObjs.push(lo);
+      });
+    });
+
+    // Étape 3: Sauvegarder version fusionnée dans Supabase
+    var payload = {
+      workspace_key: SB_WK,
+      data: {
+        _savedAt: new Date().toISOString(),
+        projects: allProj, states: allStates,
+        bhData: JSON.parse(JSON.stringify(bhData)),
+        bhClients: JSON.parse(JSON.stringify(bhClients)),
+        trData: JSON.parse(JSON.stringify(trData)),
+        pmData: JSON.parse(JSON.stringify(pmData)),
+        ftData: JSON.parse(JSON.stringify(ftData)),
+        hebdoData: allHebdo, notesData: allNotes, todoData: allTodo
+      },
+      updated_at: new Date().toISOString()
+    };
+    var h = sbHeaders(); h['Prefer']='resolution=merge-duplicates';
+    return fetch(SB_URL+'/rest/v1/adux_data',{method:'POST',headers:h,body:JSON.stringify(payload)})
+      .then(function(){
+        // Étape 4: Sauvegarder dans localStorage et recharger
+        localStorage.setItem('adux_proj',    JSON.stringify(allProj));
+        localStorage.setItem('adux_states',  JSON.stringify(allStates));
+        localStorage.setItem('adux_hebdo',   JSON.stringify(allHebdo));
+        localStorage.setItem('adux_notes',   JSON.stringify(allNotes));
+        localStorage.setItem('adux_todo',    JSON.stringify(allTodo));
+        if(sbData.bhData)    localStorage.setItem('adux_bh',   JSON.stringify(sbData.bhData));
+        if(sbData.bhClients) localStorage.setItem('adux_bhc',  JSON.stringify(sbData.bhClients));
+        if(sbData.trData)    localStorage.setItem('adux_tr',   JSON.stringify(sbData.trData));
+        if(sbData.ftData)    localStorage.setItem('adux_ft',   JSON.stringify(sbData.ftData));
+        if(sbData.pmData)    localStorage.setItem('adux_pm',   JSON.stringify(sbData.pmData));
+        setTimeout(function(){ location.reload(); }, 500);
+      });
   })
   .catch(function(){ location.reload(); });
 }
