@@ -758,7 +758,7 @@ function saveProjects(){
   try{localStorage.setItem('adux_proj',JSON.stringify(projects));}catch(e){}
 }
 
-var TL = {onb:'Onboarding',bhproc:'Banque d\'heures',meta:'Meta Ads',goo:'Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu',plan:'Plan média',tracker:'Suivi projet'};
+var TL = {onb:'Onboarding',bhproc:'Banque d\'heures',meta:'Meta Ads',goo:'Google Ads',auditgoo:'Audit Google Ads',web:'Site web',seo:'SEO',contenu:'Contenu',plan:'Plan média',tracker:'Suivi projet'};
 var TI = {onb:'🤝',bhproc:'🏦',meta:'📘',goo:'🔍',auditgoo:'🔬',web:'🌐',seo:'📈',contenu:'✍️',plan:'📅',tracker:'📊'};
 
 function initWizard(){
@@ -4895,7 +4895,22 @@ function sbSave(){
       data: {
         _savedAt:  new Date().toISOString(),
         projects:  allProj,
-        states:    JSON.parse(JSON.stringify(states)),
+        states:    (function(){
+          // Fusionner states avec Supabase pour ne pas perdre les coches des collègues
+          var merged = JSON.parse(JSON.stringify(states));
+          var sbS = sbData.states || {};
+          Object.keys(sbS).forEach(function(pid){
+            if(!merged[pid]){ merged[pid]=sbS[pid]; return; }
+            Object.keys(sbS[pid]).forEach(function(mod){
+              if(!merged[pid][mod]){ merged[pid][mod]=sbS[pid][mod]; return; }
+              Object.keys(sbS[pid][mod]).forEach(function(iid){
+                if(!merged[pid][mod][iid]) merged[pid][mod][iid]=sbS[pid][mod][iid];
+                else if(sbS[pid][mod][iid]&&sbS[pid][mod][iid].done) merged[pid][mod][iid].done=true;
+              });
+            });
+          });
+          return merged;
+        })(),
         bhData:    JSON.parse(JSON.stringify(bhData)),
         bhClients: JSON.parse(JSON.stringify(bhClients)),
         trData:    JSON.parse(JSON.stringify(trData)),
