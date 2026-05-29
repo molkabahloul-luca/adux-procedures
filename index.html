@@ -1183,8 +1183,24 @@ function chk(ns,sid,idx,val){
   saveStates(ns);
 }
 
-function saveStates(ns){ try{localStorage.setItem('adux_st_'+stKey(ns), JSON.stringify(getStates(ns)));}catch(e){} }
-function loadStates(ns){ try{var d=localStorage.getItem('adux_st_'+stKey(ns)); if(d) states[stKey(ns)]=JSON.parse(d);}catch(e){} }
+function saveStates(ns){
+  var k = stKey(ns);
+  var val = getStates(ns);
+  try{ localStorage.setItem('adux_st_'+k, JSON.stringify(val)); }catch(e){}
+  // Aussi mettre à jour le global adux_states pour Supabase
+  try{
+    var all = JSON.parse(localStorage.getItem('adux_states')||'{}');
+    all[k] = val;
+    localStorage.setItem('adux_states', JSON.stringify(all));
+  }catch(e){}
+}
+function loadStates(ns){
+  var k = stKey(ns);
+  // D'abord essayer la clé individuelle
+  try{var d=localStorage.getItem('adux_st_'+k); if(d){ states[k]=JSON.parse(d); return; }}catch(e){}
+  // Sinon essayer adux_states global (vient de Supabase)
+  try{var all=JSON.parse(localStorage.getItem('adux_states')||'{}'); if(all[k]) states[k]=all[k];}catch(e){}
+}
 
 function updateProg(ns, data){
   var total=0, done=0;
@@ -5233,7 +5249,11 @@ function sbSyncAndReload(){
       .then(function(){
         // Étape 4: Sauvegarder dans localStorage et recharger
         localStorage.setItem('adux_proj',    JSON.stringify(allProj));
-        localStorage.setItem('adux_states',  JSON.stringify(allStates));
+        localStorage.setItem('adux_states', JSON.stringify(allStates));
+        // Aussi peupler les clés individuelles pour la compatibilité
+        Object.keys(allStates).forEach(function(k){
+          try{ localStorage.setItem('adux_st_'+k, JSON.stringify(allStates[k])); }catch(e){}
+        });
         localStorage.setItem('adux_hebdo',   JSON.stringify(allHebdo));
         localStorage.setItem('adux_notes',   JSON.stringify(allNotes));
         localStorage.setItem('adux_todo',    JSON.stringify(allTodo));
